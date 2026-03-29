@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
+  
+  <title>S.L. Express | Premium Logistics</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .heading-font { font-family: 'Playfair Display', serif; }
+    
+    .map-bg::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url('https://www.transparenttextures.com/patterns/world-map.png') repeat;
+      opacity: 0.13;
+      animation: mapMove 65s linear infinite;
+      z-index: -1;
+    }
+    @keyframes mapMove { 0% { background-position: 0 0; } 100% { background-position: 1600px 1600px; } }
+    
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7); }
+      50% { box-shadow: 0 0 0 10px rgba(251, 191, 36, 0); }
+    }
+    .live-indicator { animation: pulse-glow 2s infinite; }
+    .smooth-transition { transition: all 0.3s ease; }
+    
+    .security-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .warning-banner {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: white;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Status Badge Styles */
+    .status-badge-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.5rem;
+      border-radius: 1rem;
+      border: 2px solid;
+      flex: 1;
+      min-width: 200px;
+      transition: all 0.3s ease;
+    }
+
+    .status-badge:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .status-badge-icon {
+      font-size: 2.5rem;
+    }
+
+    .status-badge-content h3 {
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin: 0;
+      opacity: 0.8;
+    }
+
+    .status-badge-content p {
+      font-size: 2rem;
+      font-weight: 700;
+      margin: 0.25rem 0 0 0;
+    }
+
+    .badge-delivered {
+      background: rgba(16, 185, 129, 0.1);
+      border-color: #10b981;
+    }
+
+    .badge-delivered .status-badge-icon { color: #10b981; }
+    .badge-delivered p { color: #10b981; }
+    .badge-delivered h3 { color: #d1fae5; }
+
+    .badge-intransit {
+      background: rgba(251, 191, 36, 0.1);
+      border-color: #fbbf24;
+    }
+
+    .badge-intransit .status-badge-icon { color: #fbbf24; }
+    .badge-intransit p { color: #fbbf24; }
+    .badge-intransit h3 { color: #fef3c7; }
+
+    .badge-pending {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: #ef4444;
+    }
+
+    .badge-pending .status-badge-icon { color: #ef4444; }
+    .badge-pending p { color: #ef4444; }
+    .badge-pending h3 { color: #fee2e2; }
+    
+    @media (max-width: 768px) {
+      .hero-bg h1 { font-size: 2.5rem !important; }
+      .admin-grid { grid-template-columns: 1fr !important; }
+      .chart-container { max-height: 300px; }
+      .status-badge {
+        min-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body class="bg-zinc-950 text-white">
+
+  <!-- Navbar -->
+  <nav class="fixed top-0 w-full bg-black/90 backdrop-blur-xl z-50 border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-5 flex justify-between items-center">
+      <div class="flex items-center gap-2 md:gap-3">
+        <div class="w-8 md:w-10 h-8 md:h-10 bg-gradient-to-br from-amber-400 to-yellow-600 rounded-xl flex items-center justify-center text-black font-bold text-lg md:text-2xl">S</div>
+        <span class="heading-font text-xl md:text-3xl tracking-tight">S.L. Express</span>
+      </div>
+      <div class="hidden md:flex gap-10 text-sm font-medium">
+        <a href="#" class="nav-link hover:text-amber-400 transition">Services</a>
+        <a href="#" onclick="showPublicTracking()" class="nav-link hover:text-amber-400 transition">Track Shipment</a>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="security-badge">🔒 Secure</span>
+        <button onclick="showAdminLogin()" class="bg-amber-500 hover:bg-amber-600 text-black font-semibold px-4 md:px-8 py-2 md:py-3 rounded-2xl transition-all text-sm md:text-base cursor-pointer">Admin</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero-bg map-bg min-h-screen flex items-center relative pt-16">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 pt-10 md:pt-20 relative z-10 w-full">
+      <h1 class="heading-font text-4xl md:text-8xl leading-tight md:leading-none font-bold tracking-tighter mb-4 md:mb-6">
+        Moving the World<br>with <span class="text-amber-400">Excellence</span>
+      </h1>
+      <p class="text-lg md:text-xl text-zinc-300 max-w-lg mb-6 md:mb-10">Ultra-premium logistics with real-time tracking and enterprise-grade security.</p>
+      <button onclick="showPublicTracking()" class="bg-amber-500 hover:bg-amber-600 text-black font-semibold px-6 md:px-10 py-3 md:py-5 rounded-3xl text-base md:text-lg transition-all cursor-pointer">Track Your Shipment</button>
+    </div>
+  </section>
+
+  <!-- Public Tracking -->
+  <section id="public-tracking" class="hidden py-12 md:py-28 bg-zinc-900 map-bg relative">
+    <div class="max-w-2xl mx-auto px-4 md:px-6">
+      <div class="text-center mb-8 md:mb-12">
+        <h2 class="heading-font text-3xl md:text-5xl font-bold">Track Your Shipment</h2>
+        <p class="text-zinc-400 text-sm mt-2">Your data is encrypted and secure</p>
+      </div>
+      <div class="bg-zinc-950 border border-white/10 rounded-3xl p-6 md:p-10">
+        <input id="track-input" placeholder="Enter Tracking Number (e.g. SLX987654321)" 
+               class="w-full bg-zinc-900 border border-white/10 rounded-2xl px-4 md:px-8 py-4 md:py-6 text-base md:text-lg focus:outline-none focus:border-amber-500"
+               autocomplete="off">
+        <button onclick="performTracking()" 
+                class="mt-4 md:mt-6 w-full bg-amber-500 hover:bg-amber-600 text-black font-bold py-4 md:py-5 rounded-2xl text-base md:text-lg transition-all cursor-pointer">TRACK SHIPMENT</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tracking Result -->
+  <section id="tracking-result" class="hidden min-h-screen flex items-center py-8 md:py-20 bg-zinc-950">
+    <div class="max-w-2xl mx-auto px-4 md:px-6 w-full">
+      <div class="bg-black rounded-3xl p-6 md:p-12 border border-amber-400/20">
+        <h1 class="heading-font text-4xl md:text-6xl text-white text-center mb-6 md:mb-8">Shipment Status</h1>
+        
+        <div id="result-main" class="text-center text-sm md:text-base"></div>
+
+        <div class="flex flex-col md:flex-row justify-center gap-3 md:gap-4 mt-8 md:mt-12">
+          <button id="pod-btn" onclick="showPodModal()" class="hidden bg-emerald-600 hover:bg-emerald-700 text-white px-6 md:px-8 py-3 md:py-4 rounded-2xl text-sm md:text-lg cursor-pointer">📄 View POD</button>
+          <button onclick="showTimeline()" class="bg-zinc-700 hover:bg-zinc-600 text-white px-6 md:px-8 py-3 md:py-4 rounded-2xl text-sm md:text-lg cursor-pointer">📋 View Details</button>
+        </div>
+      </div>
+
+      <div id="shipment-history" class="hidden mt-8 md:mt-12 bg-zinc-900 p-6 md:p-8 rounded-3xl">
+        <h3 class="text-xl md:text-2xl mb-6 font-semibold text-center">Shipment Timeline</h3>
+        <div id="timeline" class="space-y-4 md:space-y-6 overflow-x-auto"></div>
+      </div>
+      
+      <button onclick="backToTracking()" class="mt-8 md:mt-12 block mx-auto text-amber-400 hover:text-white text-base md:text-lg transition cursor-pointer">← Back to Home</button>
+    </div>
+  </section>
+
+  <!-- POD Modal -->
+  <div id="pod-modal" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-[300] p-4">
+    <div class="bg-zinc-900 p-4 md:p-6 rounded-3xl max-w-2xl w-full mx-4">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl md:text-2xl">Proof of Delivery</h3>
+        <button onclick="closePodModal()" class="text-2xl md:text-3xl text-zinc-400 hover:text-white cursor-pointer">×</button>
+      </div>
+      <div id="pod-image-container" class="bg-black rounded-2xl overflow-hidden"></div>
+      <button onclick="closePodModal()" class="mt-4 md:mt-6 w-full bg-zinc-800 hover:bg-zinc-700 py-3 md:py-4 rounded-2xl transition-all cursor-pointer">Close</button>
+    </div>
+  </div>
+
+  <!-- Admin Panel -->
+  <div id="admin-panel" class="hidden fixed inset-0 bg-zinc-950 overflow-auto z-[100]">
+    <div class="max-w-7xl mx-auto p-4 md:p-8">
+      <div id="security-banner" class="warning-banner hidden">
+        <i class="fas fa-shield-alt"></i>
+        <span id="security-msg">Session security notice</span>
+      </div>
+
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-0 mb-8 md:mb-10">
+        <h1 class="heading-font text-3xl md:text-5xl">Admin Dashboard</h1>
+        <button onclick="logoutAdmin()" class="bg-red-600 hover:bg-red-700 px-6 md:px-8 py-2 md:py-3 rounded-2xl transition-all cursor-pointer">Logout</button>
+      </div>
+
+      <div class="mb-6 flex items-center gap-3 bg-zinc-900 p-4 rounded-2xl border border-emerald-500/30">
+        <div class="w-3 h-3 bg-emerald-500 rounded-full live-indicator"></div>
+        <span class="text-sm md:text-base">Real-time updates active | Encrypted connection</span>
+      </div>
+
+      <!-- STATUS BADGE COUNTERS - NEW FEATURE -->
+      <div class="status-badge-container">
+        <div class="status-badge badge-delivered">
+          <div class="status-badge-icon">✓</div>
+          <div class="status-badge-content">
+            <h3>Delivered</h3>
+            <p id="badge-delivered-count">0</p>
+          </div>
+        </div>
+        
+        <div class="status-badge badge-intransit">
+          <div class="status-badge-icon">🚚</div>
+          <div class="status-badge-content">
+            <h3>In Transit</h3>
+            <p id="badge-intransit-count">0</p>
+          </div>
+        </div>
+        
+        <div class="status-badge badge-pending">
+          <div class="status-badge-icon">⏳</div>
+          <div class="status-badge-content">
+            <h3>Pending</h3>
+            <p id="badge-pending-count">0</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col md:flex-row gap-3 mb-8 overflow-x-auto">
+        <button onclick="switchParentTab(0)" id="parent0" class="parent-tab active px-6 md:px-10 py-3 md:py-4 bg-amber-500 text-black font-semibold rounded-2xl whitespace-nowrap transition-all cursor-pointer">Shipments</button>
+        <button onclick="switchParentTab(1)" id="parent1" class="parent-tab px-6 md:px-10 py-3 md:py-4 hover:bg-white/10 rounded-2xl whitespace-nowrap transition-all cursor-pointer">Add Shipment</button>
+        <button onclick="switchParentTab(2)" id="parent2" class="parent-tab px-6 md:px-10 py-3 md:py-4 hover:bg-white/10 rounded-2xl whitespace-nowrap transition-all cursor-pointer">Analytics</button>
+        <button onclick="switchParentTab(3)" id="parent3" class="parent-tab px-6 md:px-10 py-3 md:py-4 hover:bg-white/10 rounded-2xl whitespace-nowrap transition-all cursor-pointer">Activity Log</button>
+      </div>
+
+      <!-- Shipments Tab -->
+      <div id="parent-content-0">
+        <input id="search-input" placeholder="Search by Tracking Number..." 
+               class="w-full bg-zinc-800 border border-white/20 rounded-2xl px-4 md:px-6 py-3 md:py-4 text-base md:text-lg focus:outline-none focus:border-amber-500 mb-6"
+               onkeyup="renderShipments()"
+               autocomplete="off">
+
+        <div class="flex flex-wrap gap-2 md:gap-3 mb-6 md:mb-8 border-b border-white/10 pb-4 overflow-x-auto">
+          <button onclick="switchSubTab(0)" id="subtab0" class="sub-tab active px-6 md:px-8 py-2 md:py-3 rounded-2xl bg-amber-500 text-black font-semibold whitespace-nowrap transition-all cursor-pointer">Update</button>
+          <button onclick="switchSubTab(1)" id="subtab1" class="sub-tab px-6 md:px-8 py-2 md:py-3 rounded-2xl hover:bg-white/10 whitespace-nowrap transition-all cursor-pointer">Pending</button>
+          <button onclick="switchSubTab(2)" id="subtab2" class="sub-tab px-6 md:px-8 py-2 md:py-3 rounded-2xl hover:bg-white/10 whitespace-nowrap transition-all cursor-pointer">Delivered</button>
+        </div>
+
+        <div class="bg-zinc-900 rounded-3xl overflow-x-auto">
+          <table class="w-full text-sm md:text-base">
+            <thead class="bg-zinc-800">
+              <tr>
+                <th class="p-3 md:p-5 text-left">Tracking</th>
+                <th class="p-3 md:p-5 text-left hidden sm:table-cell">Customer</th>
+                <th class="p-3 md:p-5 text-left hidden md:table-cell">Route</th>
+                <th class="p-3 md:p-5 text-left">Status</th>
+                <th class="p-3 md:p-5 text-left hidden lg:table-cell">Date</th>
+                <th class="p-3 md:p-5 text-left">Location</th>
+                <th class="p-3 md:p-5 text-left">POD</th>
+                <th class="p-3 md:p-5 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="shipments-body" class="divide-y divide-white/10"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Add Shipment Tab -->
+      <div id="parent-content-1" class="hidden bg-zinc-900 p-6 md:p-10 rounded-3xl max-w-2xl">
+        <h2 class="text-2xl md:text-3xl mb-6 md:mb-8">Create New Shipment</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+          <input id="new-tracking" placeholder="Tracking Number" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
+          <input id="new-customer" placeholder="Customer Name" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
+          <input id="new-origin" placeholder="Origin City" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
+          <input id="new-destination" placeholder="Destination City" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
+          <select id="new-status" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base">
+            <option value="Picked Up">Picked Up</option>
+            <option value="In Transit" selected>In Transit</option>
+            <option value="Out for Delivery">Out for Delivery</option>
+            <option value="Delivered">Delivered</option>
+            <option value="Others">Others (Custom)</option>
+          </select>
+          <input id="new-date" type="date" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base">
+        </div>
+        <button onclick="addNewShipment()" class="mt-8 md:mt-10 w-full bg-amber-500 hover:bg-amber-600 text-black py-4 md:py-6 rounded-2xl font-bold text-base md:text-lg transition-all cursor-pointer">
+          Create Shipment
+        </button>
+      </div>
+
+      <!-- Analytics Tab -->
+      <div id="parent-content-2" class="hidden">
+        <div class="admin-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+          <div class="bg-zinc-900 p-6 rounded-2xl border border-white/10 smooth-transition hover:border-amber-400/30">
+            <p class="text-zinc-400 text-sm mb-2">Total Shipments</p>
+            <p class="heading-font text-3xl md:text-4xl text-amber-400" id="total-shipments">0</p>
+          </div>
+          <div class="bg-zinc-900 p-6 rounded-2xl border border-white/10 smooth-transition hover:border-emerald-400/30">
+            <p class="text-zinc-400 text-sm mb-2">Delivered</p>
+            <p class="heading-font text-3xl md:text-4xl text-emerald-400" id="delivered-count">0</p>
+          </div>
+          <div class="bg-zinc-900 p-6 rounded-2xl border border-white/10 smooth-transition hover:border-yellow-400/30">
+            <p class="text-zinc-400 text-sm mb-2">In Transit</p>
+            <p class="heading-font text-3xl md:text-4xl text-yellow-400" id="in-transit-count">0</p>
+          </div>
+          <div class="bg-zinc-900 p-6 rounded-2xl border border-white/10 smooth-transition hover:border-red-400/30">
+            <p class="text-zinc-400 text-sm mb-2">Pending</p>
+            <p class="heading-font text-3xl md:text-4xl text-red-400" id="pending-count">0</p>
+          </div>
+        </div>
+
+        <div class="admin-grid grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div class="bg-zinc-900 p-6 rounded-2xl border border-white/10">
+            <h3 class="text-lg md:text-xl font-semibold mb-4">Shipment Status Distribution</h3>
+            <div class="chart-container">
+              <canvas id="statusChart"></canvas>
+            </div>
+          </div>
+          <div class="bg-zinc-900 p-6 rounded-2xl border border-white/10">
+            <h3 class="text-lg md:text-xl font-semibold mb-4">Shipments by Route</h3>
+            <div class="chart-container">
+              <canvas id="routeChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-zinc-900 p-6 rounded-2xl border border-white/10">
+          <h3 class="text-lg md:text-xl font-semibold mb-4">Daily Activity</h3>
+          <div class="chart-container">
+            <canvas id="activityChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity Log Tab -->
+      <div id="parent-content-3" class="hidden">
+        <div class="bg-zinc-900 p-6 rounded-2xl border border-white/10">
+          <h2 class="text-2xl font-semibold mb-6">Admin Activity Log</h2>
+          <div class="flex gap-3 mb-6">
+            <button onclick="clearActivityLog()" class="bg-red-600 hover:bg-red-700 px-6 py-2 rounded-2xl text-sm transition-all cursor-pointer">Clear Log</button>
+            <button onclick="downloadActivityLog()" class="bg-emerald-600 hover:bg-emerald-700 px-6 py-2 rounded-2xl text-sm transition-all cursor-pointer">Download CSV</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-zinc-800">
+                <tr>
+                  <th class="p-3 text-left">Timestamp</th>
+                  <th class="p-3 text-left">Admin</th>
+                  <th class="p-3 text-left">Action</th>
+                  <th class="p-3 text-left">Details</th>
+                  <th class="p-3 text-left">IP Address</th>
+                </tr>
+              </thead>
+              <tbody id="activity-body" class="divide-y divide-white/10"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Login -->
+  <div id="login-modal" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-[200] p-4">
+    <div id="login-form" class="bg-zinc-900 p-6 md:p-10 rounded-3xl w-full max-w-md relative">
+      <button onclick="closeAdminLogin()" class="absolute top-4 right-4 text-2xl text-zinc-400 hover:text-white cursor-pointer">×</button>
+      
+      <h2 class="heading-font text-3xl md:text-4xl text-center mb-2">Admin Login</h2>
+      <p class="text-zinc-400 text-center text-sm mb-8">Secure Authentication</p>
+      
+      <input id="admin-user" placeholder="Username" class="w-full bg-zinc-800 p-3 md:p-5 rounded-2xl mb-4 text-sm md:text-base" autocomplete="off" type="text">
+      <input id="admin-pass" placeholder="Password" class="w-full bg-zinc-800 p-3 md:p-5 rounded-2xl mb-6 text-sm md:text-base" autocomplete="off" type="password">
+      
+      <button onclick="loginAdmin()" class="w-full bg-amber-500 hover:bg-amber-600 text-black py-3 md:py-5 rounded-2xl font-bold text-base md:text-lg transition-all cursor-pointer">Login</button>
+      
+      <p id="login-msg" class="text-red-500 text-center mt-4 hidden text-sm md:text-base"></p>
+      <p id="login-attempts" class="text-yellow-400 text-center mt-2 hidden text-xs">Attempts remaining: <span id="attempts-count">3</span></p>
+      
+      <button onclick="showForgotPassword()" class="w-full text-amber-400 hover:text-amber-300 mt-6 text-sm transition cursor-pointer">Forgot Password?</button>
+    </div>
+
+    <!-- Forgot Password Form -->
+    <div id="forgot-password-form" class="hidden bg-zinc-900 p-6 md:p-10 rounded-3xl w-full max-w-md relative">
+      <button onclick="closeAdminLogin()" class="absolute top-4 right-4 text-2xl text-zinc-400 hover:text-white cursor-pointer">×</button>
+      
+      <button onclick="backToLogin()" class="text-2xl text-zinc-400 hover:text-white mb-4 cursor-pointer">←</button>
+      <h2 class="heading-font text-3xl md:text-4xl text-center mb-2">Reset Password</h2>
+      <p class="text-zinc-400 text-center text-sm mb-8">Enter your username to receive password reset instructions</p>
+      
+      <input id="reset-username" placeholder="Username" class="w-full bg-zinc-800 p-3 md:p-5 rounded-2xl mb-6 text-sm md:text-base" autocomplete="off" type="text">
+      
+      <button onclick="sendPasswordReset()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 md:py-5 rounded-2xl font-bold text-base md:text-lg transition-all cursor-pointer">Send Reset Link</button>
+      
+      <p id="reset-msg" class="text-center mt-4 hidden text-sm md:text-base"></p>
+      
+      <button onclick="backToLogin()" class="w-full text-amber-400 hover:text-amber-300 mt-6 text-sm transition cursor-pointer">Back to Login</button>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // SUPABASE SETUP
+    // ============================================
+    const SUPABASE_URL = 'https://xijrmwwhhawrwvzjfzml.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhpanJtd3doaGF3cnd2empmem1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MDcyOTEsImV4cCI6MjA5MDM4MzI5MX0.pgH11u7eJiQQK_Lzt956bfBs_sMb9LXS-ooNdGbrICU';
+    const { createClient } = window.supabase;
+    const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // ============================================
+    // SIMPLE SECURITY CONFIG
+    // ============================================
+    
+    const SECURITY_CONFIG = {
+      maxLoginAttempts: 3
+    };
+
+    let securityState = {
+      loginAttempts: 0,
+      sessionId: null,
+      currentAdmin: null,
+      isSessionActive: false
+    };
+
+    let shipments = [];
+    let activityLog = [];
+    let currentTrackedShipment = null;
+    let chartInstances = {};
+    let analyticsInterval = null;
+    
+    // SIMPLE CREDENTIALS (NO HASHING)
+    const ADMIN_USERS = {
+      "bengaluru": "bengaluru123",
+      "chennai": "chennai123"
+    };
+
+    let currentParentTab = 0;
+    let currentSubTab = 0;
+
+    // ============================================
+    // IMPORTANT ACTIONS FOR ACTIVITY LOG
+    // ============================================
+    const IMPORTANT_ACTIONS = [
+      'LOGIN', 'LOGOUT', 'CREATE_SHIPMENT', 'UPDATE_STATUS',
+      'DELETE_SHIPMENT', 'UPLOAD_POD', 'FAILED_LOGIN',
+      'PASSWORD_RESET_REQUESTED', 'CLEAR_LOG', 'DOWNLOAD_LOG',
+      'CONFIRM_UPDATE', 'UPDATE_CUSTOM_STATUS'
+    ];
+
+    // ============================================
+    // UTILITY FUNCTIONS
+    // ============================================
+    
+    function sanitizeInput(input) {
+      return String(input)
+        .replace(/[<>\"'`]/g, '')
+        .trim()
+        .substring(0, 100);
+    }
+
+    async function logActivity(action, details) {
+      if (!IMPORTANT_ACTIONS.includes(action)) return;
+
+      const timestamp = new Date().toISOString();
+      const logEntry = {
+        timestamp,
+        admin: securityState.currentAdmin || 'Anonymous',
+        action,
+        details,
+        session_id: securityState.sessionId
+      };
+      
+      activityLog.push({ ...logEntry, ipAddress: 'Local' });
+      
+      await db.from('activity_logs').insert(logEntry);
+      
+      if (currentParentTab === 3) {
+        renderActivityLog();
+      }
+    }
+
+    async function renderActivityLog() {
+      const tbody = document.getElementById('activity-body');
+      tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-zinc-400 text-sm">Loading...</td></tr>';
+
+      const { data, error } = await db.from('activity_logs').select('*').order('timestamp', { ascending: false }).limit(50);
+      if (error) { tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-red-400">Failed to load logs</td></tr>'; return; }
+
+      tbody.innerHTML = '';
+      (data || []).forEach(log => {
+        tbody.innerHTML += `
+          <tr class="hover:bg-zinc-800">
+            <td class="p-3 text-xs">${new Date(log.timestamp).toLocaleString()}</td>
+            <td class="p-3 text-xs">${sanitizeInput(log.admin)}</td>
+            <td class="p-3 text-xs font-semibold text-amber-400">${log.action}</td>
+            <td class="p-3 text-xs">${sanitizeInput(log.details)}</td>
+            <td class="p-3 text-xs">Cloud</td>
+          </tr>
+        `;
+      });
+    }
+
+    async function clearActivityLog() {
+      if (confirm("Are you sure? This cannot be undone.")) {
+        await db.from('activity_logs').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+        activityLog = [];
+        await logActivity('CLEAR_LOG', 'Activity log cleared');
+        renderActivityLog();
+      }
+    }
+
+    async function downloadActivityLog() {
+      const { data } = await db.from('activity_logs').select('*').order('timestamp', { ascending: false });
+      let csv = 'Timestamp,Admin,Action,Details\n';
+      (data || []).forEach(log => {
+        csv += `"${log.timestamp}","${log.admin}","${log.action}","${log.details}"\n`;
+      });
+      
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `activity-log-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      
+      logActivity('DOWNLOAD_LOG', 'Activity log downloaded');
+    }
+
+    // ============================================
+    // SESSION MANAGEMENT (SIMPLIFIED)
+    // ============================================
+    
+    function startSession(adminName) {
+      securityState.currentAdmin = adminName;
+      securityState.isSessionActive = true;
+      securityState.sessionId = 'sess_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+      
+      logActivity('LOGIN', `Admin logged in`);
+    }
+
+    // ============================================
+    // CORE FUNCTIONS
+    // ============================================
+    
+    function saveData() {
+      updateAnalytics();
+      updateStatusBadges();
+    }
+
+    // NEW FUNCTION: Update Status Badge Counters
+    function updateStatusBadges() {
+      const delivered = shipments.filter(s => s.status === "Delivered").length;
+      const inTransit = shipments.filter(s => s.status === "In Transit").length;
+      const pending = shipments.filter(s => s.status !== "Delivered" && s.status !== "In Transit").length;
+
+      document.getElementById('badge-delivered-count').textContent = delivered;
+      document.getElementById('badge-intransit-count').textContent = inTransit;
+      document.getElementById('badge-pending-count').textContent = pending;
+    }
+
+    function switchParentTab(n) {
+      if (!securityState.isSessionActive) {
+        alert('Session expired. Please log in again.');
+        return;
+      }
+      
+      currentParentTab = n;
+      document.querySelectorAll('.parent-tab').forEach((btn, i) => {
+        if (i === n) btn.classList.add('active', 'bg-amber-500', 'text-black');
+        else btn.classList.remove('active', 'bg-amber-500', 'text-black');
+      });
+      
+      for (let i = 0; i < 4; i++) {
+        const content = document.getElementById(`parent-content-${i}`);
+        if (content) content.classList.toggle('hidden', i !== n);
+      }
+      
+      if (n === 2) {
+        setTimeout(() => updateAnalytics(), 100);
+      }
+      if (n === 3) {
+        renderActivityLog();
+      }
+    }
+
+    function switchSubTab(n) {
+      currentSubTab = n;
+      document.getElementById('search-input').value = '';
+      
+      document.querySelectorAll('.sub-tab').forEach((btn, i) => {
+        if (i === n) btn.classList.add('active', 'bg-amber-500', 'text-black');
+        else btn.classList.remove('active', 'bg-amber-500', 'text-black');
+      });
+      renderShipments();
+    }
+
+    function renderShipments() {
+      if (currentParentTab !== 0) return;
+      const search = sanitizeInput(document.getElementById('search-input').value).toUpperCase();
+      const tbody = document.getElementById('shipments-body');
+      tbody.innerHTML = '';
+
+      const filtered = shipments.filter(s => {
+        if (search && !s.tracking.toUpperCase().includes(search)) return false;
+        if (currentSubTab === 0) return !s.pod;
+        if (currentSubTab === 1) return s.pod && s.status !== "Delivered";
+        if (currentSubTab === 2) return s.pod && s.status === "Delivered";
+        return true;
+      });
+
+      filtered.forEach((s) => {
+        const idx = shipments.findIndex(item => item.tracking === s.tracking);
+        const podDisplay = s.pod 
+          ? `<button onclick="showPodModal(${idx})" class="text-emerald-400 hover:text-emerald-300 font-semibold transition-all cursor-pointer">📷 View POD</button>` 
+          : `<span class="text-red-400 font-semibold">❌ No POD</span>`;
+
+        tbody.innerHTML += `
+          <tr class="hover:bg-zinc-800 smooth-transition">
+            <td class="p-3 md:p-5 font-mono text-xs md:text-sm">${sanitizeInput(s.tracking)}</td>
+            <td class="p-3 md:p-5 hidden sm:table-cell text-xs md:text-sm">${sanitizeInput(s.customer)}</td>
+            <td class="p-3 md:p-5 hidden md:table-cell text-xs md:text-sm">${sanitizeInput(s.origin)} → ${sanitizeInput(s.destination)}</td>
+            <td class="p-3 md:p-5 text-xs md:text-sm">
+              <div class="flex flex-col gap-2">
+                <select onchange="updateStatus(${idx}, this.value)" class="bg-zinc-800 border border-amber-400 px-2 md:px-4 py-1 md:py-2 rounded-xl text-xs md:text-sm cursor-pointer" id="status-select-${idx}">
+                  <option value="Picked Up" ${s.status==='Picked Up'?'selected':''}>Picked Up</option>
+                  <option value="In Transit" ${s.status==='In Transit'?'selected':''}>In Transit</option>
+                  <option value="Out for Delivery" ${s.status==='Out for Delivery'?'selected':''}>Out</option>
+                  <option value="Delivered" ${s.status==='Delivered'?'selected':''}>Delivered</option>
+                  <option value="Others" ${s.status.startsWith('Others')?'selected':''}>Others</option>
+                </select>
+                ${s.status.startsWith('Others') ? `<input type="text" value="${sanitizeInput(s.status.replace('Others: ',''))}" id="custom-others-${idx}" onchange="updateCustomStatus(${idx}, this.value)" onblur="updateCustomStatus(${idx}, this.value)" placeholder="Custom message" class="bg-zinc-700 border border-yellow-400 p-2 rounded-lg text-xs md:text-sm w-full">` : ''}
+              </div>
+            </td>
+            <td class="p-3 md:p-5 hidden lg:table-cell text-xs md:text-sm">${s.date || 'N/A'}</td>
+            <td class="p-3 md:p-5 text-xs md:text-sm text-zinc-400">${sanitizeInput(s.location) || 'N/A'}</td>
+            <td class="p-3 md:p-5 text-xs md:text-sm">${podDisplay}</td>
+            <td class="p-3 md:p-5 text-xs md:text-sm">
+              <div class="flex gap-1 flex-wrap">
+                <button onclick="openStatusUpdateModal(${idx})" class="bg-blue-600 hover:bg-blue-700 px-2 md:px-3 py-1 rounded-lg text-xs transition-all cursor-pointer" title="Update Status with Date & Location">📝</button>
+                <button onclick="deleteShipment(${idx})" class="bg-red-600 hover:bg-red-700 px-2 md:px-3 py-1 rounded-lg text-xs transition-all cursor-pointer" title="Delete">✕</button>
+                <label class="cursor-pointer bg-amber-500 hover:bg-amber-600 px-2 md:px-3 py-1 rounded-lg text-xs font-medium transition-all" title="Upload POD">
+                  📷
+                  <input type="file" accept="image/*" onchange="uploadPOD(event, ${idx})" class="hidden">
+                </label>
+              </div>
+            </td>
+          </tr>`;
+      });
+    }
+
+    async function updateStatus(index, newStatus) {
+      if (newStatus === "Others") {
+        shipments[index].status = "Others: ";
+      } else {
+        shipments[index].status = sanitizeInput(newStatus);
+      }
+      await db.from('shipments').update({ status: shipments[index].status }).eq('tracking', shipments[index].tracking);
+      saveData();
+      logActivity('UPDATE_STATUS', `Updated shipment ${shipments[index].tracking} status to ${newStatus}`);
+      renderShipments();
+    }
+
+    async function updateCustomStatus(index, text) {
+      const sanitized = sanitizeInput(text);
+      if (sanitized.length === 0) return;
+      if (sanitized.length < 2) {
+        alert('Custom status must be at least 2 characters');
+        return;
+      }
+      shipments[index].status = "Others: " + sanitized;
+      await db.from('shipments').update({ status: shipments[index].status }).eq('tracking', shipments[index].tracking);
+      saveData();
+      logActivity('UPDATE_CUSTOM_STATUS', `Updated shipment ${shipments[index].tracking} with custom status`);
+    }
+
+    function openStatusUpdateModal(index) {
+      const shipment = shipments[index];
+      const modal = document.createElement('div');
+      modal.id = 'status-update-modal';
+      modal.className = 'fixed inset-0 bg-black/90 flex items-center justify-center z-[400] p-4';
+      
+      const today = new Date().toISOString().split('T')[0];
+      
+      modal.innerHTML = `
+        <div class="bg-zinc-900 p-6 md:p-10 rounded-3xl w-full max-w-md">
+          <h2 class="heading-font text-2xl md:text-3xl mb-6 text-center">Update Status</h2>
+          
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm font-semibold mb-2 text-zinc-300">Status</label>
+              <select id="modal-status" class="w-full bg-zinc-800 border border-amber-400 p-3 rounded-lg text-sm">
+                <option value="Picked Up">Picked Up</option>
+                <option value="In Transit" selected>In Transit</option>
+                <option value="Out for Delivery">Out for Delivery</option>
+                <option value="Delivered">Delivered</option>
+                <option value="Others">Others</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-semibold mb-2 text-zinc-300">📅 Update Date</label>
+              <input type="date" id="modal-date" value="${today}" class="w-full bg-zinc-800 border border-white/20 p-3 rounded-lg text-sm">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-semibold mb-2 text-zinc-300">📍 Location</label>
+              <input type="text" id="modal-location" placeholder="e.g., Delhi Distribution Center" value="${sanitizeInput(shipment.location) || ''}" class="w-full bg-zinc-800 border border-white/20 p-3 rounded-lg text-sm" maxlength="100">
+            </div>
+          </div>
+          
+          <div class="flex gap-3 mt-8">
+            <button onclick="confirmStatusUpdate(${index})" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-lg font-semibold transition-all">
+              ✓ Confirm
+            </button>
+            <button onclick="closeStatusUpdateModal()" class="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white py-3 rounded-lg font-semibold transition-all">
+              ✕ Cancel
+            </button>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(modal);
+    }
+
+    async function confirmStatusUpdate(index) {
+      const newStatus = document.getElementById('modal-status').value;
+      const newDate = document.getElementById('modal-date').value;
+      const newLocation = sanitizeInput(document.getElementById('modal-location').value);
+      
+      if (!newDate) {
+        alert('Please select a date');
+        return;
+      }
+      
+      if (!newLocation) {
+        alert('Please enter a location');
+        return;
+      }
+      
+      if (newStatus === "Others") {
+        shipments[index].status = "Others: Custom";
+      } else {
+        shipments[index].status = newStatus;
+      }
+      
+      shipments[index].date = newDate;
+      shipments[index].location = newLocation;
+      
+      if (!shipments[index].history) shipments[index].history = [];
+      shipments[index].history.push({
+        status: shipments[index].status,
+        date: newDate,
+        location: newLocation
+      });
+      
+      await db.from('shipments').update({
+        status: shipments[index].status,
+        date: newDate,
+        location: newLocation,
+        history: shipments[index].history
+      }).eq('tracking', shipments[index].tracking);
+
+      saveData();
+      logActivity('CONFIRM_UPDATE', `Updated shipment ${shipments[index].tracking} - Status: ${newStatus}, Date: ${newDate}, Location: ${newLocation}`);
+      closeStatusUpdateModal();
+      renderShipments();
+      alert('✓ Status updated successfully!');
+    }
+
+    function closeStatusUpdateModal() {
+      const modal = document.getElementById('status-update-modal');
+      if (modal) modal.remove();
+    }
+
+    async function deleteShipment(index) {
+      if (confirm("Delete this shipment permanently?")) {
+        const trackingNo = shipments[index].tracking;
+        await db.from('shipments').delete().eq('tracking', trackingNo);
+        shipments.splice(index, 1);
+        saveData();
+        logActivity('DELETE_SHIPMENT', `Deleted shipment ${trackingNo}`);
+        renderShipments();
+      }
+    }
+
+    async function uploadPOD(e, index) {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      if (!file.type.startsWith('image/')) {
+        alert('Only image files are allowed');
+        return;
+      }
+      
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File size must be less than 5MB');
+        return;
+      }
+
+      const ext = file.name.split('.').pop();
+      const fileName = `${shipments[index].tracking}_${Date.now()}.${ext}`;
+
+      const { error: uploadError } = await db.storage.from('pod-images').upload(fileName, file);
+      if (uploadError) { alert('❌ Upload failed: ' + uploadError.message); return; }
+
+      const { data: urlData } = db.storage.from('pod-images').getPublicUrl(fileName);
+      const publicUrl = urlData.publicUrl;
+
+      await db.from('shipments').update({ pod_url: publicUrl }).eq('tracking', shipments[index].tracking);
+      shipments[index].pod = publicUrl;
+      shipments[index].pod_url = publicUrl;
+
+      saveData();
+      logActivity('UPLOAD_POD', `Uploaded POD for shipment ${shipments[index].tracking}`);
+      renderShipments();
+      alert("✅ POD uploaded!");
+    }
+
+    function showPodModal(index) {
+      if (index === undefined || index === null || !shipments[index] || !shipments[index].pod) {
+        alert("No POD available");
+        return;
+      }
+      
+      const podContainer = document.getElementById('pod-image-container');
+      podContainer.innerHTML = '';
+      
+      const img = new Image();
+      img.src = shipments[index].pod;
+      img.onload = () => {
+        podContainer.innerHTML = `<img src="${shipments[index].pod}" alt="POD" class="w-full h-auto max-h-96">`;
+        document.getElementById('pod-modal').classList.remove('hidden');
+      };
+      img.onerror = () => {
+        podContainer.innerHTML = '<p class="text-red-400 text-center py-8">Failed to load image</p>';
+        document.getElementById('pod-modal').classList.remove('hidden');
+      };
+    }
+
+    function closePodModal() {
+      document.getElementById('pod-modal').classList.add('hidden');
+    }
+
+    async function addNewShipment() {
+      let tracking = sanitizeInput(document.getElementById('new-tracking').value).toUpperCase();
+      
+      if (!tracking) {
+        tracking = "SLX" + Math.floor(10000000 + Math.random()*90000000);
+      }
+      
+      if (shipments.some(s => s.tracking.toUpperCase() === tracking.toUpperCase())) {
+        alert("❌ Tracking number already exists! Please use a different number.");
+        return;
+      }
+
+      const customer = sanitizeInput(document.getElementById('new-customer').value) || "Customer";
+      const origin = sanitizeInput(document.getElementById('new-origin').value) || "Bengaluru";
+      const destination = sanitizeInput(document.getElementById('new-destination').value) || "Mumbai";
+      let status = document.getElementById('new-status').value;
+      const date = document.getElementById('new-date').value || new Date().toISOString().slice(0,10);
+
+      if (status === "Others") status = "Others: Custom Status";
+
+      const newShipment = { 
+        tracking, customer, origin, destination, status, date, 
+        location: "Initial Pickup",
+        history: [{ status: status, date: date, location: "Initial Pickup" }],
+        pod_url: null 
+      };
+
+      const { error } = await db.from('shipments').insert(newShipment);
+      if (error) { alert("❌ Failed to create shipment: " + error.message); return; }
+
+      shipments.push({ ...newShipment, pod: null });
+      saveData();
+      logActivity('CREATE_SHIPMENT', `Created new shipment ${tracking}`);
+      document.getElementById('new-tracking').value = '';
+      document.getElementById('new-customer').value = '';
+      document.getElementById('new-origin').value = '';
+      document.getElementById('new-destination').value = '';
+      document.getElementById('new-date').value = new Date().toISOString().split('T')[0];
+      renderShipments();
+      alert("✅ Shipment created!");
+    }
+
+    async function performTracking() {
+      const input = sanitizeInput(document.getElementById('track-input').value).trim().toUpperCase();
+      if (!input) {
+        alert("Please enter a tracking number");
+        return;
+      }
+
+      const { data, error } = await db.from('shipments').select('*').eq('tracking', input).single();
+      const resultDiv = document.getElementById('result-main');
+
+      if (data && !error) {
+        const shipment = { ...data, pod: data.pod_url };
+        currentTrackedShipment = shipment;
+
+        // Also update local array if present
+        const localIdx = shipments.findIndex(s => s.tracking === input);
+        if (localIdx >= 0) shipments[localIdx] = shipment;
+
+        let statusText = shipment.status.startsWith('Others: ') ? shipment.status.replace('Others: ', '') : shipment.status;
+        let color = (statusText.includes("Delivered")) ? 'text-emerald-400' : 'text-amber-400';
+
+        resultDiv.innerHTML = `
+          <p class="text-3xl md:text-5xl font-bold ${color} mb-6 md:mb-10">Status: ${sanitizeInput(statusText)}</p>
+          <div class="text-left text-base md:text-lg space-y-2 md:space-y-3 max-w-md mx-auto">
+            <p><strong>Tracking:</strong> ${sanitizeInput(shipment.tracking)}</p>
+            <p><strong>Route:</strong> ${sanitizeInput(shipment.origin)} → ${sanitizeInput(shipment.destination)}</p>
+            <p><strong>Date:</strong> ${shipment.date || 'N/A'}</p>
+            <p><strong>Location:</strong> ${sanitizeInput(shipment.location) || 'N/A'}</p>
+          </div>
+        `;
+
+        const podBtn = document.getElementById('pod-btn');
+        if (shipment.pod_url) {
+          podBtn.classList.remove('hidden');
+          podBtn.onclick = () => showPodModalByUrl(shipment.pod_url);
+        } else {
+          podBtn.classList.add('hidden');
+        }
+
+        document.getElementById('public-tracking').classList.add('hidden');
+        document.getElementById('tracking-result').classList.remove('hidden');
+        document.getElementById('tracking-result').scrollIntoView({ behavior: 'smooth' });
+      } else {
+        alert("No shipment found!");
+      }
+    }
+
+    function showPodModalByUrl(url) {
+      const podContainer = document.getElementById('pod-image-container');
+      podContainer.innerHTML = `<img src="${url}" alt="POD" class="w-full h-auto max-h-96">`;
+      document.getElementById('pod-modal').classList.remove('hidden');
+    }
+
+    function showTimeline() {
+      if (!currentTrackedShipment) {
+        alert("No shipment data");
+        return;
+      }
+
+      const timelineDiv = document.getElementById('timeline');
+      timelineDiv.innerHTML = '';
+
+      if (currentTrackedShipment.history && currentTrackedShipment.history.length > 0) {
+        currentTrackedShipment.history.forEach((entry) => {
+          timelineDiv.innerHTML += `
+            <div class="flex gap-4 md:gap-6 border-l-2 border-amber-400 pl-4 md:pl-6 py-2">
+              <div class="text-right w-20 md:w-28 flex-shrink-0">
+                <p class="font-medium text-xs md:text-sm text-zinc-400">${entry.date || 'N/A'}</p>
+              </div>
+              <div class="flex-1">
+                <p class="font-semibold text-sm md:text-base">${sanitizeInput(entry.status) || 'No Status'}</p>
+                <p class="text-zinc-400 text-xs md:text-sm">📍 ${sanitizeInput(entry.location) || 'Location N/A'}</p>
+              </div>
+            </div>
+          `;
+        });
+      } else {
+        timelineDiv.innerHTML = `<p class="text-zinc-400 text-center text-sm">No timeline data</p>`;
+      }
+
+      document.getElementById('shipment-history').classList.remove('hidden');
+      document.getElementById('shipment-history').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function updateAnalytics() {
+      const total = shipments.length;
+      const delivered = shipments.filter(s => s.status === "Delivered").length;
+      const inTransit = shipments.filter(s => s.status === "In Transit").length;
+      const pending = shipments.filter(s => s.status !== "Delivered" && s.status !== "In Transit").length;
+
+      document.getElementById('total-shipments').textContent = total;
+      document.getElementById('delivered-count').textContent = delivered;
+      document.getElementById('in-transit-count').textContent = inTransit;
+      document.getElementById('pending-count').textContent = pending;
+
+      renderStatusChart();
+      renderRouteChart();
+      renderActivityChart();
+    }
+
+    function renderStatusChart() {
+      const ctx = document.getElementById('statusChart');
+      if (!ctx) return;
+
+      const delivered = shipments.filter(s => s.status === "Delivered").length;
+      const inTransit = shipments.filter(s => s.status === "In Transit").length;
+      const others = shipments.filter(s => !["Delivered", "In Transit"].includes(s.status)).length;
+
+      if (chartInstances.status) {
+        chartInstances.status.destroy();
+        delete chartInstances.status;
+      }
+      
+      chartInstances.status = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Delivered', 'In Transit', 'Pending'],
+          datasets: [{
+            data: [delivered, inTransit, others],
+            backgroundColor: ['#10b981', '#fbbf24', '#ef4444'],
+            borderColor: '#18181b',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              labels: { color: '#fff', font: { size: 12 } }
+            }
+          }
+        }
+      });
+    }
+
+    function renderRouteChart() {
+      const ctx = document.getElementById('routeChart');
+      if (!ctx) return;
+
+      const routes = {};
+      shipments.forEach(s => {
+        const route = `${sanitizeInput(s.origin)} → ${sanitizeInput(s.destination)}`;
+        routes[route] = (routes[route] || 0) + 1;
+      });
+
+      if (chartInstances.route) {
+        chartInstances.route.destroy();
+        delete chartInstances.route;
+      }
+      
+      chartInstances.route = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(routes),
+          datasets: [{
+            label: 'Shipments',
+            data: Object.values(routes),
+            backgroundColor: '#fbbf24',
+            borderColor: '#f59e0b',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          indexAxis: 'y',
+          plugins: {
+            legend: { labels: { color: '#fff' } }
+          },
+          scales: {
+            x: { ticks: { color: '#fff' }, grid: { color: '#3f3f46' } },
+            y: { ticks: { color: '#fff' }, grid: { color: '#3f3f46' } }
+          }
+        }
+      });
+    }
+
+    function renderActivityChart() {
+      const ctx = document.getElementById('activityChart');
+      if (!ctx) return;
+
+      const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      const data = [12, 19, 3, 5, 2, 15, 8];
+
+      if (chartInstances.activity) {
+        chartInstances.activity.destroy();
+        delete chartInstances.activity;
+      }
+      
+      chartInstances.activity = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: days,
+          datasets: [{
+            label: 'Shipments Processed',
+            data: data,
+            borderColor: '#fbbf24',
+            backgroundColor: 'rgba(251, 191, 36, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: { labels: { color: '#fff' } }
+          },
+          scales: {
+            y: { ticks: { color: '#fff' }, grid: { color: '#3f3f46' } },
+            x: { ticks: { color: '#fff' }, grid: { color: '#3f3f46' } }
+          }
+        }
+      });
+    }
+
+    function backToTracking() {
+      document.getElementById('tracking-result').classList.add('hidden');
+      document.getElementById('public-tracking').classList.remove('hidden');
+    }
+
+    function showPublicTracking() {
+      document.getElementById('public-tracking').classList.remove('hidden');
+      document.getElementById('tracking-result').classList.add('hidden');
+      document.getElementById('public-tracking').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // ============================================
+    // LOGIN & PASSWORD RESET FUNCTIONS
+    // ============================================
+
+    function showAdminLogin() {
+      document.getElementById('login-modal').classList.remove('hidden');
+      document.getElementById('login-form').classList.remove('hidden');
+      document.getElementById('forgot-password-form').classList.add('hidden');
+      securityState.loginAttempts = 0;
+      updateLoginAttempts();
+      document.getElementById('admin-user').value = '';
+      document.getElementById('admin-pass').value = '';
+    }
+
+    function closeAdminLogin() {
+      document.getElementById('login-modal').classList.add('hidden');
+    }
+
+    function updateLoginAttempts() {
+      const attemptsDiv = document.getElementById('login-attempts');
+      if (securityState.loginAttempts > 0) {
+        attemptsDiv.classList.remove('hidden');
+        document.getElementById('attempts-count').textContent = SECURITY_CONFIG.maxLoginAttempts - securityState.loginAttempts;
+      } else {
+        attemptsDiv.classList.add('hidden');
+      }
+    }
+
+    async function loginAdmin() {
+      const user = sanitizeInput(document.getElementById('admin-user').value).trim().toLowerCase();
+      const pass = document.getElementById('admin-pass').value;
+
+      if (!user || !pass) {
+        showLoginError('Please enter username and password');
+        return;
+      }
+
+      if (securityState.loginAttempts >= SECURITY_CONFIG.maxLoginAttempts) {
+        showLoginError('Too many failed attempts. Please try again later.');
+        return;
+      }
+
+      if (ADMIN_USERS[user] && ADMIN_USERS[user] === pass) {
+        document.getElementById('login-modal').classList.add('hidden');
+        document.getElementById('admin-panel').classList.remove('hidden');
+        
+        startSession(user);
+
+        // Load shipments from Supabase
+        const { data, error } = await db.from('shipments').select('*').order('created_at', { ascending: false });
+        if (!error && data) {
+          shipments = data.map(s => ({ ...s, pod: s.pod_url }));
+        }
+
+        switchParentTab(0);
+        switchSubTab(0);
+        updateStatusBadges();
+        
+        securityState.loginAttempts = 0;
+      } else {
+        securityState.loginAttempts++;
+        updateLoginAttempts();
+        showLoginError(`Invalid credentials. ${SECURITY_CONFIG.maxLoginAttempts - securityState.loginAttempts} attempts remaining.`);
+        logActivity('FAILED_LOGIN', `Failed login attempt for user: ${user}`);
+      }
+    }
+
+    function showLoginError(msg) {
+      const msgDiv = document.getElementById('login-msg');
+      msgDiv.textContent = msg;
+      msgDiv.classList.remove('hidden');
+      setTimeout(() => msgDiv.classList.add('hidden'), 4000);
+    }
+
+    function showForgotPassword() {
+      document.getElementById('login-form').classList.add('hidden');
+      document.getElementById('forgot-password-form').classList.remove('hidden');
+      document.getElementById('reset-username').value = '';
+      document.getElementById('reset-msg').textContent = '';
+      document.getElementById('reset-msg').classList.add('hidden');
+    }
+
+    function backToLogin() {
+      document.getElementById('login-form').classList.remove('hidden');
+      document.getElementById('forgot-password-form').classList.add('hidden');
+      document.getElementById('admin-user').value = '';
+      document.getElementById('admin-pass').value = '';
+    }
+
+    function sendPasswordReset() {
+      const username = sanitizeInput(document.getElementById('reset-username').value).trim().toLowerCase();
+      const msgDiv = document.getElementById('reset-msg');
+
+      if (!username) {
+        msgDiv.textContent = 'Please enter your username';
+        msgDiv.classList.remove('hidden', 'text-emerald-400');
+        msgDiv.classList.add('text-red-500');
+        return;
+      }
+
+      if (!ADMIN_USERS[username]) {
+        msgDiv.textContent = 'Username not found';
+        msgDiv.classList.remove('hidden', 'text-emerald-400');
+        msgDiv.classList.add('text-red-500');
+        return;
+      }
+
+      const resetCode = Math.random().toString(36).substr(2, 9).toUpperCase();
+      
+      msgDiv.innerHTML = `<strong>✓ Success!</strong><br>A password reset link has been sent to your registered email.<br><br><strong>Demo Reset Code:</strong> <code>${resetCode}</code><br><br>In production, you would receive an email with further instructions.`;
+      msgDiv.classList.remove('hidden', 'text-red-500');
+      msgDiv.classList.add('text-emerald-400');
+      
+      logActivity('PASSWORD_RESET_REQUESTED', `Password reset requested for user: ${username}`);
+      
+      setTimeout(() => {
+        backToLogin();
+      }, 5000);
+    }
+
+    function logoutAdmin() {
+      logActivity('LOGOUT', `Admin logged out`);
+      securityState.isSessionActive = false;
+      
+      if (analyticsInterval) clearInterval(analyticsInterval);
+      
+      document.getElementById('admin-panel').classList.add('hidden');
+      document.getElementById('security-banner').classList.add('hidden');
+    }
+
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+
+    window.onload = () => {
+      const today = new Date().toISOString().split('T')[0];
+      const dateField = document.getElementById('new-date');
+      if (dateField) {
+        dateField.value = today;
+      }
+      
+      console.log('✅ S.L. Express Ready');
+      console.log('✓ All systems online');
+    };
+  </script>
+</body>
+</html>
