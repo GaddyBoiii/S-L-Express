@@ -3,6 +3,7 @@ name: Keep Supabase Alive
 on:
   schedule:
     - cron: '0 9 * * 1,4'
+  workflow_dispatch:
 
 jobs:
   ping:
