@@ -10,9 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping Supabase
-  run: |
-    curl -s -X GET "${{ secrets.SUPABASE_URL }}/rest/v1/shipments?select=id&limit=1" \
-      -H "apikey: ${{ secrets.SUPABASE_KEY }}" && echo "Ping successful" || exit 1
+        run: |
+          curl -s -X GET "${{ secrets.SUPABASE_URL }}/rest/v1/shipments?select=id&limit=1" \
+            -H "apikey: ${{ secrets.SUPABASE_KEY }}" && echo "Ping successful" || exit 1
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
