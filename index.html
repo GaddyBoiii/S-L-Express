@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,12 +10,14 @@
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
+  <link rel="icon" type="image/png" href="favicon.png">
   
   <title>S.L. Express | Premium Logistics</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   
   <style>
@@ -270,6 +273,80 @@
       .status-badge { min-width: 100%; }
       .supply-section { min-height: 300px; }
     }
+    /* ══ BILLING ZONE (Add Shipment) ══ */
+    .billing-zone {
+      background: #111;
+      border: 1px solid rgba(251,191,36,0.22);
+      border-radius: 16px;
+      padding: 1.25rem;
+      margin-top: 1.5rem;
+    }
+    .billing-zone-label {
+      font-size: 11px; color: #fbbf24;
+      text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;
+      display: flex; align-items: center; gap: 6px; margin-bottom: 1rem;
+    }
+    .calc-preview {
+      background: #0a0a0a; border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px; padding: 0.85rem 1.1rem;
+      display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;
+    }
+    .calc-label  { font-size: 12px; color: #52525b; }
+    .calc-amount { font-family: 'Playfair Display', serif; font-size: 20px; color: #fbbf24; }
+
+    /* ══ BILL CARDS ══ */
+    .bill-card {
+      background: #1a1a1a; border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 20px; padding: 1.25rem; margin-bottom: 1.25rem; transition: border-color 0.3s;
+    }
+    .bill-card:hover { border-color: rgba(251,191,36,0.15); }
+    .bill-stat { background: #1a1a1a; border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 1rem 1.25rem; transition: border-color 0.3s; }
+    .bill-stat:hover { border-color: rgba(251,191,36,0.2); }
+    .bill-stat-label { font-size: 10px; color: #52525b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+    .bill-stat-val { font-family: 'Playfair Display', serif; font-size: 22px; }
+
+    /* ══ BILL TABLE ══ */
+    .bill-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .bill-table th { text-align:left; font-size:10px; font-weight:500; color:#3f3f46; padding:8px 10px; border-bottom:1px solid rgba(255,255,255,0.06); text-transform:uppercase; letter-spacing:0.04em; }
+    .bill-table td { padding:11px 10px; border-bottom:1px solid rgba(255,255,255,0.05); color:#d4d4d8; vertical-align:middle; }
+    .bill-table tr:last-child td { border-bottom:none; }
+    .bill-table tr:hover td { background:rgba(255,255,255,0.015); }
+
+    /* ══ PILLS ══ */
+    .bill-pill { font-size:11px; padding:3px 10px; border-radius:9999px; display:inline-block; font-weight:500; }
+    .pill-paid    { background:rgba(16,185,129,0.1);  border:1px solid rgba(16,185,129,0.25); color:#10b981; }
+    .pill-pending { background:rgba(251,191,36,0.08); border:1px solid rgba(251,191,36,0.25); color:#fbbf24; }
+    .pill-draft   { background:rgba(113,113,122,0.1); border:1px solid rgba(113,113,122,0.2); color:#71717a; }
+
+    .back-link { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:#71717a; cursor:pointer; margin-bottom:1rem; transition:color 0.2s; }
+    .back-link:hover { color:#fbbf24; }
+
+    .total-bar {
+      background:rgba(251,191,36,0.06); border:1px solid rgba(251,191,36,0.15);
+      border-radius:12px; padding:1rem 1.25rem;
+      display:flex; justify-content:space-between; align-items:center; margin-top:1rem;
+    }
+
+    /* ══ AVATARS ══ */
+    .cust-av { width:28px; height:28px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:600; flex-shrink:0; }
+    .av-a { background:rgba(251,191,36,0.15); color:#fbbf24; }
+    .av-b { background:rgba(16,185,129,0.1);  color:#10b981; }
+    .av-c { background:rgba(139,92,246,0.1);  color:#a78bfa; }
+    .av-d { background:rgba(239,68,68,0.1);   color:#ef4444; }
+
+    /* ══ ICON BUTTONS ══ */
+    .icon-action { background:none; border:none; color:#52525b; cursor:pointer; font-size:13px; padding:4px 6px; border-radius:8px; transition:background 0.15s, color 0.15s; }
+    .icon-action:hover { background:rgba(255,255,255,0.07); color:#fbbf24; }
+
+    /* ══ EDIT MODAL ══ */
+    .edit-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:500; align-items:center; justify-content:center; padding:1rem; }
+    .edit-modal.open { display:flex; }
+    .edit-box { background:#1a1a1a; border:1px solid rgba(251,191,36,0.2); border-radius:24px; padding:2rem; width:100%; max-width:420px; }
+    .edit-input-full { background:#111; border:1px solid rgba(255,255,255,0.08); color:#e4e4e7; font-size:14px; padding:10px 14px; border-radius:12px; width:100%; outline:none; font-family:'Inter',sans-serif; transition:border-color 0.2s; margin-bottom:14px; }
+    .edit-input-full:focus { border-color:rgba(251,191,36,0.4); }
+
+    /* ══ STATISTICS ══ */
+    .stat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:1rem; margin-bottom:1.5rem; }
   </style>
 </head>
 <body class="bg-zinc-950 text-white">
@@ -479,6 +556,8 @@
         <button onclick="switchParentTab(1)" id="parent1" class="parent-tab px-6 md:px-10 py-3 md:py-4 hover:bg-white/10 rounded-2xl whitespace-nowrap transition-all cursor-pointer">Add Shipment</button>
         <button onclick="switchParentTab(2)" id="parent2" class="parent-tab px-6 md:px-10 py-3 md:py-4 hover:bg-white/10 rounded-2xl whitespace-nowrap transition-all cursor-pointer">Analytics</button>
         <button onclick="switchParentTab(3)" id="parent3" class="parent-tab px-6 md:px-10 py-3 md:py-4 hover:bg-white/10 rounded-2xl whitespace-nowrap transition-all cursor-pointer">Activity Log</button>
+        <button onclick="switchParentTab(4)" id="parent4" class="parent-tab px-6 md:px-10 py-3 md:py-4 hover:bg-white/10 rounded-2xl whitespace-nowrap transition-all cursor-pointer">Billing</button>
+        <button onclick="switchParentTab(5)" id="parent5" class="parent-tab px-6 md:px-10 py-3 md:py-4 hover:bg-white/10 rounded-2xl whitespace-nowrap transition-all cursor-pointer">Statistics</button>
       </div>
 
       <!-- Shipments Tab -->
@@ -514,11 +593,13 @@
       </div>
 
       <!-- Add Shipment Tab -->
-      <div id="parent-content-1" class="hidden bg-zinc-900 p-6 md:p-10 rounded-3xl max-w-2xl">
+      <div id="parent-content-1" class="hidden bg-zinc-900 p-6 md:p-10 rounded-3xl max-w-2xl mx-auto">
         <h2 class="text-2xl md:text-3xl mb-6 md:mb-8">Create New Shipment</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           <input id="new-tracking" placeholder="Tracking Number" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
           <input id="new-customer" placeholder="Customer Name" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
+          <input id="new-custid"    placeholder="Customer ID (e.g. CUST-001)" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
+          <input id="new-consignee" placeholder="Consignee Name (receiver)"   class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
           <input id="new-origin" placeholder="Origin City" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
           <input id="new-destination" placeholder="Destination City" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
           <select id="new-status" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base">
@@ -530,10 +611,184 @@
           </select>
           <input id="new-date" type="date" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base">
         </div>
-        <button onclick="addNewShipment()" class="mt-8 md:mt-10 w-full bg-amber-500 hover:bg-amber-600 text-black py-4 md:py-6 rounded-2xl font-bold text-base md:text-lg transition-all cursor-pointer">
+          <!-- BILLING ZONE -->
+          <div class="billing-zone">
+            <div class="billing-zone-label">
+              <i class="fa-solid fa-lock" style="font-size:10px"></i> Billing details · admin only
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-xs text-zinc-500 mb-2 uppercase tracking-wider">No. of boxes</label>
+                <input id="new-boxes" type="number" min="1" placeholder="e.g. 12"
+                      class="bg-zinc-800 border border-white/10 focus:border-amber-400/60 p-3 rounded-xl text-sm w-full outline-none transition-colors"
+                      oninput="updateCalcPreview()" autocomplete="off">
+              </div>
+              <div>
+                <label class="block text-xs text-zinc-500 mb-2 uppercase tracking-wider">Total weight (kg)</label>
+                <input id="new-weight" type="number" min="0" step="0.1" placeholder="e.g. 340"
+                      class="bg-zinc-800 border border-white/10 focus:border-amber-400/60 p-3 rounded-xl text-sm w-full outline-none transition-colors"
+                      oninput="updateCalcPreview()" autocomplete="off">
+              </div>
+              <div>
+                <label class="block text-xs text-zinc-500 mb-2 uppercase tracking-wider">Rate per kg (₹)</label>
+                <input id="new-rate" type="number" min="0" step="0.5" placeholder="e.g. 38"
+                      class="bg-zinc-800 border border-white/10 focus:border-amber-400/60 p-3 rounded-xl text-sm w-full outline-none transition-colors"
+                      oninput="updateCalcPreview()" autocomplete="off">
+              </div>
+            </div>
+            <div class="calc-preview">
+              <span class="calc-label" id="calc-desc">Enter weight & rate to preview bill amount</span>
+              <span class="calc-amount" id="calc-amt">—</span>
+            </div>
+          </div>
+          <button onclick="addNewShipment()" class="mt-8 md:mt-10 w-full bg-amber-500 hover:bg-amber-600 text-black py-4 md:py-6 rounded-2xl font-bold text-base md:text-lg transition-all cursor-pointer">
           Create Shipment
-        </button>
+          </button>
       </div>
+      <!-- ════ TAB 4: BILLING ════ -->
+      <div id="parent-content-4" class="hidden">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+          <div>
+            <h2 class="heading-font text-2xl md:text-3xl text-white">Billing</h2>
+            <p class="text-zinc-500 text-sm mt-1">Monthly client bills · weight × rate /kg</p>
+          </div>
+          <div class="flex gap-3 items-center flex-wrap">
+            <select id="bill-month"
+                    class="bg-zinc-800 border border-white/10 text-zinc-300 text-sm px-4 py-2 rounded-2xl outline-none focus:border-amber-500 cursor-pointer"
+                    onchange="renderBilling()">
+            </select>
+            <button onclick="exportExcel(null)"
+                    class="bg-emerald-600 hover:bg-emerald-700 px-5 py-2 rounded-2xl text-sm font-semibold transition-all cursor-pointer flex items-center gap-2">
+              <i class="fa-solid fa-file-excel text-xs"></i> Export All
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6" id="bill-stats"></div>
+
+        <div class="bill-card" id="bill-list-card">
+          <div class="flex justify-between items-center mb-4">
+            <span class="text-sm font-semibold text-zinc-200">Client bills — <span id="bill-month-label">May 2026</span></span>
+            <span class="text-xs text-zinc-600">Click a row to view breakdown + export invoice</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="bill-table">
+              <thead>
+                <tr>
+                  <th>Customer</th><th>Cust ID</th><th>Boxes</th>
+                  <th>Total kg</th><th>Rate /kg</th><th>Bill amount</th>
+                  <th>Status</th><th style="width:70px"></th>
+                </tr>
+              </thead>
+              <tbody id="bill-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="bill-detail" style="display:none">
+          <div class="back-link" onclick="closeBillDetail()">
+            <i class="fa-solid fa-arrow-left" style="font-size:10px"></i> Back to billing
+          </div>
+          <div class="bill-card" style="margin-bottom:0">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
+              <div>
+                <div class="text-base font-semibold text-zinc-100" id="det-cname"></div>
+                <div class="text-xs text-zinc-600 mt-1" id="det-cid"></div>
+              </div>
+              <div class="flex gap-2 flex-wrap items-center">
+                <button onclick="markPaid()"
+                        class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer flex items-center gap-1">
+                  <i class="fa-solid fa-check text-xs"></i> Mark paid
+                </button>
+                <div class="flex items-center gap-2 bg-zinc-800 border border-white/10 rounded-xl px-3 py-2">
+                  <input type="date" id="range-from" class="bg-transparent text-zinc-300 text-xs outline-none cursor-pointer">
+                  <span class="text-zinc-600 text-xs">→</span>
+                  <input type="date" id="range-to" class="bg-transparent text-zinc-300 text-xs outline-none cursor-pointer">
+                </div>
+                <button onclick="exportRangeExcel(detailCustId)"
+                        class="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer flex items-center gap-2">
+                  <i class="fa-solid fa-file-excel text-xs"></i> Export
+                </button>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 bg-zinc-950 rounded-xl p-4 mb-4">
+              <div><div class="text-xs text-zinc-600 uppercase tracking-wider mb-1">Month</div>   <div class="text-sm font-medium text-zinc-200" id="det-month"></div></div>
+              <div><div class="text-xs text-zinc-600 uppercase tracking-wider mb-1">Boxes</div>   <div class="text-sm font-medium text-zinc-200" id="det-boxes"></div></div>
+              <div><div class="text-xs text-zinc-600 uppercase tracking-wider mb-1">Weight</div>  <div class="text-sm font-medium text-zinc-200" id="det-wt"></div></div>
+              <div><div class="text-xs text-zinc-600 uppercase tracking-wider mb-1">Rate /kg</div><div class="text-sm font-medium text-zinc-200" id="det-rate"></div></div>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="bill-table">
+                <thead>
+                  <tr>
+                    <th>S/No</th><th>Date</th><th>AWB No.</th>
+                    <th>Consignee</th><th>Destination</th>
+                    <th>Qty (boxes)</th><th>Weight (kg)</th><th>Amount</th>
+                    <th style="width:44px"></th>
+                  </tr>
+                </thead>
+                <tbody id="det-tbody"></tbody>
+              </table>
+            </div>
+            <div class="total-bar">
+              <div class="text-xs text-zinc-600" id="det-summary"></div>
+              <div class="heading-font text-2xl text-amber-400" id="det-total"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- ════ TAB 5: STATISTICS ════ -->
+      <div id="parent-content-5" class="hidden">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+          <div>
+            <h2 class="heading-font text-2xl md:text-4xl text-white">Statistics</h2>
+            <p class="text-zinc-500 text-sm mt-1">Billed amounts across all months · not collected</p>
+          </div>
+          <div class="text-xs text-zinc-600 bg-zinc-900 border border-white/10 px-4 py-2 rounded-full">Live from shipment data</div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="md:col-span-2 relative overflow-hidden rounded-3xl p-6 md:p-8" style="background:linear-gradient(135deg,#1a1200 0%,#1a1a1a 60%,#111 100%);border:1px solid rgba(251,191,36,0.25);">
+            <div class="absolute top-0 right-0 w-48 h-48 rounded-full pointer-events-none" style="background:radial-gradient(circle,rgba(251,191,36,0.08) 0%,transparent 70%);transform:translate(30%,-30%)"></div>
+            <div class="text-xs text-amber-500/70 uppercase tracking-widest font-semibold mb-2">Total Billed · All Time</div>
+            <div class="heading-font text-4xl md:text-5xl text-amber-400 mb-3" id="stats-all-time">—</div>
+            <div class="flex flex-wrap gap-4 mt-2">
+              <div class="text-xs text-zinc-500"><span class="text-zinc-300 font-medium" id="stats-shipcount">—</span> shipments</div>
+              <div class="text-xs text-zinc-500"><span class="text-zinc-300 font-medium" id="stats-boxcount">—</span> boxes</div>
+              <div class="text-xs text-zinc-500"><span class="text-zinc-300 font-medium" id="stats-kgcount">—</span> kg total</div>
+            </div>
+          </div>
+          <div class="flex flex-col gap-4">
+            <div class="flex-1 rounded-2xl p-5 flex flex-col justify-between" style="background:#111;border:1px solid rgba(16,185,129,0.2);">
+              <div class="text-xs text-emerald-400/70 uppercase tracking-widest font-semibold mb-1">Best Month</div>
+              <div class="heading-font text-2xl text-emerald-400" id="stats-best-amt">—</div>
+              <div class="text-xs text-zinc-600 mt-1" id="stats-best-month">—</div>
+            </div>
+            <div class="flex-1 rounded-2xl p-5 flex flex-col justify-between" style="background:#111;border:1px solid rgba(139,92,246,0.2);">
+              <div class="text-xs text-violet-400/70 uppercase tracking-widest font-semibold mb-1">Top Client</div>
+              <div class="heading-font text-xl text-violet-400 leading-tight" id="stats-top-client">—</div>
+              <div class="text-xs text-zinc-600 mt-1" id="stats-top-client-amt">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-3xl p-6 mb-6" style="background:#111;border:1px solid rgba(255,255,255,0.06);">
+          <div class="flex items-center justify-between mb-5">
+            <div class="text-sm font-semibold text-zinc-200">Month-by-month</div>
+            <div class="text-xs text-zinc-600">sorted newest first</div>
+          </div>
+          <div id="stats-month-rows" class="space-y-3"></div>
+        </div>
+
+        <div class="rounded-3xl p-6" style="background:#111;border:1px solid rgba(255,255,255,0.06);">
+          <div class="flex items-center justify-between mb-5">
+            <div class="text-sm font-semibold text-zinc-200">Per-client breakdown</div>
+            <div class="text-xs text-zinc-600">ranked by total billed</div>
+          </div>
+          <div id="stats-client-cards" class="space-y-3"></div>
+        </div>
+      </div>
+
 
       <!-- Analytics Tab -->
       <div id="parent-content-2" class="hidden">
@@ -672,13 +927,8 @@
     let currentTrackedShipment = null;
     let chartInstances = {};
     let analyticsInterval = null;
-    
-    // SIMPLE CREDENTIALS (NO HASHING)
-    const ADMIN_USERS = {
-      "bengaluru": "bengaluru123",
-      "chennai": "chennai123"
-    };
 
+  
     let currentParentTab = 0;
     let currentSubTab = 0;
 
@@ -815,7 +1065,7 @@
         else btn.classList.remove('active', 'bg-amber-500', 'text-black');
       });
       
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 6; i++) {
         const content = document.getElementById(`parent-content-${i}`);
         if (content) content.classList.toggle('hidden', i !== n);
       }
@@ -825,6 +1075,12 @@
       }
       if (n === 3) {
         renderActivityLog();
+      }
+      if (n === 4) {
+        renderBilling();
+      }
+      if (n === 5) {
+      renderStatistics();
       }
     }
 
@@ -1126,11 +1382,19 @@
 
       if (status === "Others") status = "Others: Custom Status";
 
+      const consignee = sanitizeInput(document.getElementById('new-consignee').value) || "";
+      const custId    = sanitizeInput(document.getElementById('new-custid').value) || "";
+      const boxes     = parseInt(document.getElementById('new-boxes').value) || 0;
+      const weight    = parseFloat(document.getElementById('new-weight').value) || 0;
+      const rate      = parseFloat(document.getElementById('new-rate').value) || 0;
+
       const newShipment = { 
-        tracking, customer, origin, destination, status, date, 
+        tracking, customer, consignee,
+        cust_id: custId,        // ← was custId
+        origin, destination, status, date,
         location: "Initial Pickup",
-        history: [{ status: status, date: date, location: "Initial Pickup" }],
-        pod_url: null 
+        history: [{ status, date, location: "Initial Pickup" }],
+        pod_url: null, boxes, weight, rate
       };
 
       const { error } = await db.from('shipments').insert(newShipment);
@@ -1144,8 +1408,19 @@
       document.getElementById('new-origin').value = '';
       document.getElementById('new-destination').value = '';
       document.getElementById('new-date').value = new Date().toISOString().split('T')[0];
+      document.getElementById('new-custid').value = '';
+      document.getElementById('new-consignee').value = '';
+      document.getElementById('new-boxes').value = '';
+      document.getElementById('new-weight').value = '';
+      document.getElementById('new-rate').value = '';
+      document.getElementById('calc-desc').textContent = 'Enter weight & rate to preview bill amount';
+      document.getElementById('calc-amt').textContent = '—';
       renderShipments();
       alert("✅ Shipment created!");
+      const { data: freshData, error: fetchErr } = await db.from('shipments').select('*').order('created_at', { ascending: false });
+      if (!fetchErr && freshData) {
+        shipments = freshData.map(s => ({ ...s, custId: s.cust_id }));
+      }
     }
 
     async function performTracking() {
@@ -1176,6 +1451,7 @@
             <p><strong>Route:</strong> ${sanitizeInput(shipment.origin)} → ${sanitizeInput(shipment.destination)}</p>
             <p><strong>Date:</strong> ${shipment.date || 'N/A'}</p>
             <p><strong>Location:</strong> ${sanitizeInput(shipment.location) || 'N/A'}</p>
+            ${shipment.consignee ? `<p><strong>Consignee:</strong> ${sanitizeInput(shipment.consignee)}</p>` : ''}
           </div>
         `;
 
@@ -1408,7 +1684,8 @@
       const user = sanitizeInput(document.getElementById('admin-user').value).trim().toLowerCase();
       const pass = document.getElementById('admin-pass').value;
 
-      if (!user || !pass) {
+      const email = document.getElementById('admin-user').value.trim();
+      if (!email || !pass) {
         showLoginError('Please enter username and password');
         return;
       }
@@ -1418,29 +1695,33 @@
         return;
       }
 
-      if (ADMIN_USERS[user] && ADMIN_USERS[user] === pass) {
-        document.getElementById('login-modal').classList.add('hidden');
-        document.getElementById('admin-panel').classList.remove('hidden');
-        
-        startSession(user);
+      const { data: authData, error: authError } = await db.auth.signInWithPassword({
+          email: document.getElementById('admin-user').value.trim(),
+          password: pass
+        });
 
-        // Load shipments from Supabase
-        const { data, error } = await db.from('shipments').select('*').order('created_at', { ascending: false });
-        if (!error && data) {
-          shipments = data.map(s => ({ ...s, pod: s.pod_url }));
-        }
+        if (!authError && authData.user) {
+          document.getElementById('login-modal').classList.add('hidden');
+          document.getElementById('admin-panel').classList.remove('hidden');
+          
+          startSession(document.getElementById('admin-user').value.trim());
 
-        switchParentTab(0);
-        switchSubTab(0);
-        updateStatusBadges();
-        
-        securityState.loginAttempts = 0;
-      } else {
-        securityState.loginAttempts++;
-        updateLoginAttempts();
-        showLoginError(`Invalid credentials. ${SECURITY_CONFIG.maxLoginAttempts - securityState.loginAttempts} attempts remaining.`);
-        logActivity('FAILED_LOGIN', `Failed login attempt for user: ${user}`);
-      }
+          const { data, error: fetchError } = await db.from('shipments').select('*').order('created_at', { ascending: false });
+          if (!fetchError && data) {
+            shipments = data.map(s => ({ ...s, custId: s.cust_id }));
+            console.log("shipments sample:", shipments.slice(0,3).map(s=>({date:s.date, custId:s.custId, cust_id:s.cust_id})));
+          }
+
+          switchParentTab(0);
+          switchSubTab(0);
+          updateStatusBadges();
+          securityState.loginAttempts = 0;
+        } else {
+          securityState.loginAttempts++;
+          updateLoginAttempts();
+          showLoginError(`Invalid credentials. ${SECURITY_CONFIG.maxLoginAttempts - securityState.loginAttempts} attempts remaining.`);
+          logActivity('FAILED_LOGIN', `Failed login attempt`);
+        } 
     }
 
     function showLoginError(msg) {
@@ -1584,6 +1865,485 @@
       if (window.scrollY > 30) nav.classList.add('scrolled');
       else nav.classList.remove('scrolled');
     });
+    let payStatus = {};
+    let editingTrackingNo = null;
+    let detailCustId = null;
+    function payKey(c,m){ return c+"_"+m; }
+    function getPayStatus(c,m){ return payStatus[payKey(c,m)]||"pending"; }
+    function setPayStatus(c,m,st){ payStatus[payKey(c,m)]=st; }
+    function inr(n){ return "₹"+Number(n||0).toLocaleString("en-IN"); }
+    function fmtDate(d){ if(!d)return""; const p=d.split("-"); if(p.length!==3)return d; return p[2]+"."+p[1]+"."+p[0]; }
+    function monthLabel(val){ const[y,m]=val.split("-"); return["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][+m]+" "+y; }
+    // ════════════════════════════════════════════
+    // BILLING TAB
+    // ════════════════════════════════════════════
+    const CUSTOMERS = [
+        { custId: "123", name: "Your Customer Name", av: "av-a" },
+     ];
+    
+    function getMonthShipments(monthVal){
+      const [y,m]=monthVal.split("-");
+      return shipments.filter(s=>{
+        if(!s.date) return false;
+        let yyyy, mm;
+        if(s.date.includes("-")){
+          // yyyy-mm-dd format
+          [yyyy,mm]=s.date.split("-");
+        } else {
+          // ddmmyyyy format
+          mm=s.date.slice(2,4);
+          yyyy=s.date.slice(4,8);
+        }
+        return yyyy===y && mm===m;
+      });
+    }
+    
+
+    function renderBilling(){
+      // auto-populate months
+      const billSel = document.getElementById("bill-month");
+      if(billSel.options.length === 0){
+        const now = new Date();
+        for(let i = 0; i < 12; i++){
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const val = d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+          const opt = document.createElement("option");
+          opt.value = val;
+          opt.textContent = d.toLocaleString("default",{month:"short"})+" "+d.getFullYear();
+          billSel.appendChild(opt);
+        }
+      }
+ 
+      const monthVal=document.getElementById("bill-month").value;
+      const label=monthLabel(monthVal);
+      document.getElementById("bill-month-label").textContent=label;
+      closeBillDetail();
+
+      const ms=getMonthShipments(monthVal);
+      console.log("month:", monthVal, "matched shipments:", ms);
+      const groups={};
+      CUSTOMERS.forEach(c=>{groups[c.custId]={...c,shipments:[]};});
+      ms.forEach(s=>{
+        const key=s.custId||"UNCATEGORISED";
+        if(!groups[key]) groups[key]={custId:key,name:s.customer,av:"av-a",shipments:[]};
+        groups[key].shipments.push(s);
+      });
+
+      let totalBilled=0,totalCollected=0,totalOut=0,totalBoxes=0;
+      Object.values(groups).forEach(g=>{
+        const amt=g.shipments.reduce((a,s)=>a+(s.weight||0)*(s.rate||0),0);
+        const st=getPayStatus(g.custId,monthVal);
+        totalBilled+=amt;
+        totalBoxes+=g.shipments.reduce((a,s)=>a+(s.boxes||0),0);
+        if(st==="paid") totalCollected+=amt; else totalOut+=amt;
+      });
+
+      document.getElementById("bill-stats").innerHTML=`
+        <div class="bill-stat"><div class="bill-stat-label">Total billed</div><div class="bill-stat-val" style="color:#fbbf24">${inr(totalBilled)}</div></div>
+        <div class="bill-stat"><div class="bill-stat-label">Collected</div><div class="bill-stat-val" style="color:#10b981">${inr(totalCollected)}</div></div>
+        <div class="bill-stat"><div class="bill-stat-label">Outstanding</div><div class="bill-stat-val" style="color:#fbbf24">${inr(totalOut)}</div></div>
+        <div class="bill-stat"><div class="bill-stat-label">Total boxes</div><div class="bill-stat-val" style="color:#71717a">${totalBoxes.toLocaleString()}</div></div>
+      `;
+
+      let rows="";
+      Object.values(groups).forEach(g=>{
+        const cs=g.shipments;
+        const boxes=cs.reduce((a,s)=>a+(s.boxes||0),0);
+        const kg=cs.reduce((a,s)=>a+(s.weight||0),0);
+        const amt=cs.reduce((a,s)=>a+(s.weight||0)*(s.rate||0),0);
+        const rates=[...new Set(cs.map(s=>s.rate))].filter(Boolean);
+        const rStr=rates.length?(rates.length>1?`₹${Math.min(...rates)}–${Math.max(...rates)}/kg`:`₹${rates[0]}/kg`):"—";
+        const st=getPayStatus(g.custId,monthVal);
+        const pillCls=st==="paid"?"pill-paid":st==="pending"?"pill-pending":"pill-draft";
+        rows+=`<tr style="cursor:pointer" onclick="openBillDetail('${g.custId}','${monthVal}')">
+          <td><div class="flex items-center gap-2"><div class="cust-av ${g.av}">${(g.name||"?").split(" ").map(w=>w[0]).join("").slice(0,2)}</div><span class="text-zinc-200">${sanitizeInput(g.name)}</span></div></td>
+          <td class="text-zinc-500 text-xs">${sanitizeInput(g.custId)}</td>
+          <td>${boxes||"—"}</td>
+          <td class="font-medium">${kg?kg.toLocaleString()+" kg":"—"}</td>
+          <td class="text-zinc-400">${rStr}</td>
+          <td class="text-amber-400 font-semibold">${amt?inr(amt):"—"}</td>
+          <td><span class="bill-pill ${pillCls}">${st[0].toUpperCase()+st.slice(1)}</span></td>
+          <td>
+            <button class="icon-action" title="Edit" onclick="event.stopPropagation();openEditForGroup('${g.custId}','${monthVal}')">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+          </td>
+        </tr>`;
+      });
+      document.getElementById("bill-tbody").innerHTML=rows||`<tr><td colspan="8" class="p-8 text-center text-zinc-600 text-sm">No shipments this month</td></tr>`;
+    }
+
+    function openBillDetail(custId,monthVal){
+      detailCustId=custId;
+      const g={...(CUSTOMERS.find(c=>c.custId===custId)||{custId,name:custId,av:"av-a"}),shipments:getMonthShipments(monthVal).filter(s=>s.custId===custId)};
+      const cs=g.shipments;
+      const totalBoxes=cs.reduce((a,s)=>a+(s.boxes||0),0);
+      const totalKg=cs.reduce((a,s)=>a+(s.weight||0),0);
+      const totalAmt=cs.reduce((a,s)=>a+(s.weight||0)*(s.rate||0),0);
+      const rates=[...new Set(cs.map(s=>s.rate))].filter(Boolean);
+      const rStr=rates.length>1?`₹${Math.min(...rates)}–${Math.max(...rates)}/kg`:`₹${rates[0]||"—"}/kg`;
+      const st=getPayStatus(custId,monthVal);
+
+      document.getElementById("det-cname").textContent =g.name;
+      document.getElementById("det-cid").textContent   =custId+"  ·  "+st[0].toUpperCase()+st.slice(1);
+      document.getElementById("det-month").textContent =monthLabel(monthVal);
+      document.getElementById("det-boxes").textContent =totalBoxes+" boxes";
+      document.getElementById("det-wt").textContent    =totalKg.toLocaleString()+" kg";
+      document.getElementById("det-rate").textContent  =rStr;
+      document.getElementById("det-summary").textContent=cs.length+" shipments · "+totalBoxes+" boxes · "+totalKg.toLocaleString()+" kg";
+      document.getElementById("det-total").textContent =inr(totalAmt);
+
+      // FIX 3: columns match invoice format — S/No, Date, AWB No., Consignee, Destination, Qty, Weight, Amount
+      let rows="";
+      cs.forEach((s,i)=>{
+        const lineAmt=(s.weight||0)*(s.rate||0);
+        rows+=`<tr>
+          <td class="text-zinc-500">${i+1}</td>
+          <td class="text-zinc-400">${fmtDate(s.date)}</td>
+          <td class="text-amber-400 font-mono text-xs">${sanitizeInput(s.tracking)}</td>
+          <td class="text-zinc-200">${sanitizeInput(s.consignee||s.customer)}</td>
+          <td class="text-zinc-400">${sanitizeInput(s.destination)}</td>
+          <td>${s.boxes||"—"}</td>
+          <td class="font-medium">${s.weight||"—"}${s.weight?" kg":""}</td>
+          <td class="text-emerald-400 font-semibold">${lineAmt?inr(lineAmt):"—"}</td>
+          <td><button class="icon-action" onclick="openEditSingle('${s.tracking}')"><i class="fa-solid fa-pen"></i></button></td>
+        </tr>`;
+      });
+      document.getElementById("det-tbody").innerHTML=rows||`<tr><td colspan="9" class="p-6 text-center text-zinc-600 text-sm">No shipments found</td></tr>`;
+
+      document.getElementById("bill-list-card").style.display="none";
+      document.getElementById("bill-detail").style.display="block";
+    }
+
+    function closeBillDetail(){
+      document.getElementById("bill-list-card").style.display="block";
+      document.getElementById("bill-detail").style.display="none";
+      detailCustId=null;
+    }
+
+    function markPaid(){
+      const monthVal=document.getElementById("bill-month").value;
+      if(!detailCustId) return;
+      setPayStatus(detailCustId,monthVal,"paid");
+      openBillDetail(detailCustId,monthVal);
+      renderBilling();
+      document.getElementById("bill-list-card").style.display="none";
+      document.getElementById("bill-detail").style.display="block";
+    }
+
+    // ════════════════════════════════════════════
+    // EDIT BILLING
+    // ════════════════════════════════════════════
+    function openEditForGroup(custId,monthVal){
+      const first=getMonthShipments(monthVal).find(s=>s.custId===custId);
+      if(!first){alert("No shipments to edit for this client this month");return;}
+      openEditSingle(first.tracking);
+    }
+
+    function openEditSingle(tracking){
+      const s=shipments.find(x=>x.tracking===tracking);
+      if(!s) return;
+      editingTrackingNo=tracking;
+      document.getElementById("edit-boxes").value =s.boxes||"";
+      document.getElementById("edit-weight").value=s.weight||"";
+      document.getElementById("edit-rate").value  =s.rate||"";
+      updateEditCalc();
+      document.getElementById("edit-modal").classList.add("open");
+    }
+
+    function updateEditCalc(){
+      const wt  =parseFloat(document.getElementById("edit-weight").value)||0;
+      const rate=parseFloat(document.getElementById("edit-rate").value)||0;
+      const boxes=parseInt(document.getElementById("edit-boxes").value)||0;
+      if(wt&&rate){
+        document.getElementById("edit-calc-desc").textContent=`${boxes||"?"} boxes · ${wt} kg × ₹${rate}/kg`;
+        document.getElementById("edit-calc-amt").textContent=inr(wt*rate);
+      } else {
+        document.getElementById("edit-calc-desc").textContent="—";
+        document.getElementById("edit-calc-amt").textContent="—";
+      }
+    }
+
+    const editBoxes = document.getElementById("edit-boxes");
+    if(editBoxes) editBoxes.addEventListener("input", updateEditCalc);
+
+    const editWeight = document.getElementById("edit-weight");
+    if(editWeight) editWeight.addEventListener("input", updateEditCalc);
+
+    const editRate = document.getElementById("edit-rate");
+    if(editRate) editRate.addEventListener("input", updateEditCalc);
+
+    function saveEditBilling(){
+      if(!editingTrackingNo) return;
+      const idx=shipments.findIndex(s=>s.tracking===editingTrackingNo);
+      if(idx<0) return;
+      const b=parseInt(document.getElementById("edit-boxes").value);
+      const w=parseFloat(document.getElementById("edit-weight").value);
+      const r=parseFloat(document.getElementById("edit-rate").value);
+      if(b) shipments[idx].boxes=b;
+      if(w) shipments[idx].weight=w;
+      if(r) shipments[idx].rate=r;
+      closeEditModal();
+      renderBilling();
+      const monthVal=document.getElementById("bill-month").value;
+      if(detailCustId){openBillDetail(detailCustId,monthVal);document.getElementById("bill-list-card").style.display="none";document.getElementById("bill-detail").style.display="block";}
+      alert("✓ Billing entry updated!");
+    }
+
+    function closeEditModal(){
+      document.getElementById("edit-modal").classList.remove("open");
+      editingTrackingNo=null;
+    }
+
+    // ════════════════════════════════════════════
+    // FIX 2 + FIX 3: EXCEL EXPORT
+    // custId = null → export ALL clients for the month
+    // custId = "CUST-001" → export only that client
+    // Columns: S/NO, DATE (dd.mm.yyyy), AWB NO, CONSIGNEE, DESTINATION, QTY, WEIGHT, AMOUNT
+    // ════════════════════════════════════════════
+    function exportRangeExcel(custId){
+      const from = document.getElementById("range-from").value;
+      const to   = document.getElementById("range-to").value;
+      if(!from || !to){ alert("Please select both start and end dates."); return; }
+
+      let ms = shipments.filter(s => {
+        if(!s.date) return false;
+        return s.date >= from && s.date <= to;
+      });
+
+      let clientName = "All Clients";
+      if(custId){
+        ms = ms.filter(s => s.custId === custId);
+        const c = CUSTOMERS.find(x => x.custId === custId);
+        clientName = c ? c.name : custId;
+      }
+
+      if(!ms.length){ alert("No shipments found for that date range" + (custId ? " · " + clientName : "")); return; }
+
+      const rows = ms.map((s,i) => ({
+        "S/NO":        i+1,
+        "DATE":        fmtDate(s.date),
+        "AWB NO":      s.tracking,
+        "CONSIGNEE":   s.consignee || s.customer,
+        "DESTINATION": s.destination,
+        "QTY":         s.boxes  || 0,
+        "WEIGHT":      s.weight || 0,
+        "AMOUNT":      (s.weight||0)*(s.rate||0),
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Shipments");
+      XLSX.writeFile(wb, `SLE_${from}_to_${to}${custId ? "_"+clientName : ""}.xlsx`);
+    }
+    function exportExcel(custId){
+      const monthVal=document.getElementById("bill-month").value;
+      const label=monthLabel(monthVal);
+      let ms=getMonthShipments(monthVal);
+      let clientName="All Clients";
+
+      if(custId){
+        ms=ms.filter(s=>s.custId===custId);
+        const c=CUSTOMERS.find(x=>x.custId===custId);
+        clientName=c?c.name:custId;
+      }
+
+      if(!ms.length){alert("No shipments to export for "+label+(custId?" · "+clientName:""));return;}
+
+      // Columns: S/NO, DATE (dd.mm.yyyy), AWB NO, CONSIGNEE, DESTINATION, QTY, WEIGHT, AMOUNT
+      const rows=ms.map((s,i)=>({
+        "S/NO":        i+1,
+        "DATE":        fmtDate(s.date),
+        "AWB NO":      s.tracking,
+        "CONSIGNEE":   s.consignee||s.customer,
+        "DESTINATION": s.destination,
+        "QTY":         s.boxes||0,
+        "WEIGHT":      s.weight||0,
+        "AMOUNT":      (s.weight||0)*(s.rate||0),
+      }));
+
+      const ws=XLSX.utils.json_to_sheet(rows);
+
+      // Column widths
+      ws["!cols"]=[{wch:6},{wch:14},{wch:14},{wch:22},{wch:16},{wch:8},{wch:10},{wch:14}];
+
+      const wb=XLSX.utils.book_new();
+      const sheetName=(custId?clientName.substring(0,28):label);
+      XLSX.utils.book_append_sheet(wb,ws,sheetName);
+      const fileName=custId
+        ? `SLE_Invoice_${clientName.replace(/\s+/g,"_")}_${label.replace(" ","_")}.xlsx`
+        : `SLE_Billing_All_${label.replace(" ","_")}.xlsx`;
+      XLSX.writeFile(wb,fileName);
+    }
+
+    // ════════════════════════════════════════════
+    // STATISTICS TAB — fancy version
+    // ════════════════════════════════════════════
+    const CLIENT_COLORS=[
+      {border:"rgba(251,191,36,0.3)",bg:"rgba(251,191,36,0.06)",text:"#fbbf24",bar:"#fbbf24"},
+      {border:"rgba(16,185,129,0.3)",bg:"rgba(16,185,129,0.06)",text:"#10b981",bar:"#10b981"},
+      {border:"rgba(139,92,246,0.3)",bg:"rgba(139,92,246,0.06)",text:"#a78bfa",bar:"#a78bfa"},
+      {border:"rgba(239,68,68,0.3)", bg:"rgba(239,68,68,0.06)", text:"#f87171",bar:"#f87171"},
+      {border:"rgba(56,189,248,0.3)",bg:"rgba(56,189,248,0.06)",text:"#38bdf8",bar:"#38bdf8"},
+    ];
+
+    function renderStatistics(){
+      // ── totals ──
+      const allTimeTotal=shipments.reduce((a,s)=>a+(s.weight||0)*(s.rate||0),0);
+      const allTimeBoxes=shipments.reduce((a,s)=>a+(s.boxes||0),0);
+      const allTimeKg   =shipments.reduce((a,s)=>a+(s.weight||0),0);
+
+      animateCounter("stats-all-time", allTimeTotal, true);
+      document.getElementById("stats-shipcount").textContent=shipments.length.toLocaleString();
+      document.getElementById("stats-boxcount").textContent =allTimeBoxes.toLocaleString();
+      document.getElementById("stats-kgcount").textContent  =allTimeKg.toLocaleString();
+
+      // ── group by month ──
+      const monthMap={};
+      shipments.forEach(s=>{
+        if(!s.date) return;
+        const key=s.date.substring(0,7);
+        if(!monthMap[key]) monthMap[key]={total:0,count:0,boxes:0,kg:0};
+        monthMap[key].total +=(s.weight||0)*(s.rate||0);
+        monthMap[key].count ++;
+        monthMap[key].boxes +=(s.boxes||0);
+        monthMap[key].kg    +=(s.weight||0);
+      });
+
+      const sortedMonths=Object.keys(monthMap).sort((a,b)=>b.localeCompare(a));
+      const maxMonthTotal=Math.max(...Object.values(monthMap).map(d=>d.total),1);
+
+      // best month
+      if(sortedMonths.length){
+        const bestKey=Object.keys(monthMap).reduce((a,b)=>monthMap[b].total>monthMap[a].total?b:a);
+        document.getElementById("stats-best-amt").textContent  =inr(monthMap[bestKey].total);
+        document.getElementById("stats-best-month").textContent=monthLabel(bestKey);
+      }
+
+      let monthHTML="";
+      sortedMonths.forEach((m,idx)=>{
+        const d=monthMap[m];
+        const pct=allTimeTotal>0?Math.round(d.total/allTimeTotal*100):0;
+        const barW=Math.round(d.total/maxMonthTotal*100);
+        const isBest=d.total===maxMonthTotal;
+        monthHTML+=`
+          <div style="background:${isBest?"rgba(251,191,36,0.05)":"#0d0d0d"};border:1px solid ${isBest?"rgba(251,191,36,0.2)":"rgba(255,255,255,0.05)"};border-radius:14px;padding:1rem 1.25rem;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+              <div>
+                <div style="font-size:14px;font-weight:500;color:${isBest?"#fbbf24":"#d4d4d8"};display:flex;align-items:center;gap:6px;">
+                  ${monthLabel(m)}${isBest?`<span style="font-size:9px;background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,0.3);border-radius:9999px;padding:1px 7px;font-weight:600;letter-spacing:0.04em;">BEST</span>`:""}
+                </div>
+                <div style="font-size:11px;color:#52525b;margin-top:3px;">${d.count} shipments · ${d.boxes} boxes · ${d.kg.toLocaleString()} kg</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-family:'Playfair Display',serif;font-size:20px;color:#fbbf24;">${inr(d.total)}</div>
+                <div style="font-size:10px;color:#3f3f46;margin-top:2px;">${pct}% of all-time</div>
+              </div>
+            </div>
+            <div style="height:4px;background:rgba(255,255,255,0.05);border-radius:9999px;overflow:hidden;">
+              <div style="height:100%;width:0%;background:${isBest?"#fbbf24":"#52525b"};border-radius:9999px;transition:width 0.8s cubic-bezier(.4,0,.2,1);transition-delay:${idx*60}ms;" data-bar="${barW}"></div>
+            </div>
+          </div>`;
+      });
+      document.getElementById("stats-month-rows").innerHTML=monthHTML||`<p style="color:#52525b;font-size:13px;padding:1rem 0;">No data yet.</p>`;
+
+      // animate bars after paint
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        document.querySelectorAll("#stats-month-rows [data-bar]").forEach(el=>{
+          el.style.width=el.dataset.bar+"%";
+        });
+      }));
+
+      // ── per-client ──
+      const clientMap={};
+      shipments.forEach(s=>{
+        const key=s.custId||s.customer||"Unknown";
+        if(!clientMap[key]) clientMap[key]={name:s.customer,custId:s.custId||"—",total:0,count:0,kg:0,boxes:0};
+        clientMap[key].total +=(s.weight||0)*(s.rate||0);
+        clientMap[key].count ++;
+        clientMap[key].kg    +=(s.weight||0);
+        clientMap[key].boxes +=(s.boxes||0);
+      });
+
+      const sortedClients=Object.values(clientMap).sort((a,b)=>b.total-a.total);
+      const maxClientTotal=Math.max(...sortedClients.map(c=>c.total),1);
+
+      // top client
+      if(sortedClients.length){
+        const top=sortedClients[0];
+        document.getElementById("stats-top-client").textContent    =top.name;
+        document.getElementById("stats-top-client-amt").textContent=inr(top.total)+" billed";
+      }
+
+      let clientHTML="";
+      sortedClients.forEach((c,i)=>{
+        const col=CLIENT_COLORS[i%CLIENT_COLORS.length];
+        const barW=Math.round(c.total/maxClientTotal*100);
+        const share=allTimeTotal>0?Math.round(c.total/allTimeTotal*100):0;
+        const initials=(c.name||"?").split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
+        clientHTML+=`
+          <div style="background:${col.bg};border:1px solid ${col.border};border-radius:16px;padding:1.1rem 1.25rem;">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+              <div style="width:36px;height:36px;border-radius:50%;background:${col.border};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:${col.text};flex-shrink:0;">${initials}</div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:14px;font-weight:600;color:#e4e4e7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sanitizeInput(c.name)}</div>
+                <div style="font-size:10px;color:#52525b;margin-top:1px;">${sanitizeInput(c.custId)} · ${c.count} shipments · ${c.boxes} boxes · ${c.kg.toLocaleString()} kg</div>
+              </div>
+              <div style="text-align:right;flex-shrink:0;">
+                <div style="font-family:'Playfair Display',serif;font-size:20px;color:${col.text};">${inr(c.total)}</div>
+                <div style="font-size:10px;color:#3f3f46;margin-top:2px;">${share}% of total</div>
+              </div>
+            </div>
+            <div style="height:3px;background:rgba(255,255,255,0.04);border-radius:9999px;overflow:hidden;">
+              <div style="height:100%;width:0%;background:${col.bar};border-radius:9999px;transition:width 0.9s cubic-bezier(.4,0,.2,1);transition-delay:${i*80}ms;" data-cbar="${barW}"></div>
+            </div>
+          </div>`;
+      });
+      document.getElementById("stats-client-cards").innerHTML=clientHTML||`<p style="color:#52525b;font-size:13px;padding:1rem 0;">No data yet.</p>`;
+
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        document.querySelectorAll("#stats-client-cards [data-cbar]").forEach(el=>{
+          el.style.width=el.dataset.cbar+"%";
+        });
+      }));
+    }
+
+    function animateCounter(id, target, isCurrency){
+      const el=document.getElementById(id);
+      if(!el) return;
+      const duration=900;
+      const start=performance.now();
+      function step(now){
+        const progress=Math.min((now-start)/duration,1);
+        const ease=1-Math.pow(1-progress,3);
+        const val=Math.round(target*ease);
+        el.textContent=isCurrency?inr(val):val.toLocaleString();
+        if(progress<1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
   </script>
+  <div class="edit-modal" id="edit-modal">
+    <div class="edit-box">
+      <div class="flex justify-between items-center mb-5">
+        <div class="heading-font text-xl text-amber-400">Edit Billing Entry</div>
+        <button onclick="closeEditModal()" class="text-zinc-500 hover:text-white text-xl cursor-pointer">×</button>
+      </div>
+      <label class="block text-xs text-zinc-500 mb-1 uppercase tracking-wider">No. of boxes</label>
+      <input class="edit-input-full" id="edit-boxes"  type="number" placeholder="No. of boxes" autocomplete="off">
+      <label class="block text-xs text-zinc-500 mb-1 uppercase tracking-wider">Total weight (kg)</label>
+      <input class="edit-input-full" id="edit-weight" type="number" step="0.1" placeholder="Total weight (kg)" autocomplete="off">
+      <label class="block text-xs text-zinc-500 mb-1 uppercase tracking-wider">Rate per kg (₹)</label>
+      <input class="edit-input-full" id="edit-rate"   type="number" step="0.5" placeholder="Rate per kg (₹)" autocomplete="off">
+      <div class="calc-preview mb-4">
+        <span class="calc-label"  id="edit-calc-desc">—</span>
+        <span class="calc-amount" id="edit-calc-amt">—</span>
+      </div>
+      <div class="flex gap-3">
+        <button onclick="saveEditBilling()" class="flex-1 bg-amber-500 hover:bg-amber-600 text-black font-bold py-3 rounded-2xl cursor-pointer">Save</button>
+        <button onclick="closeEditModal()"  class="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white py-3 rounded-2xl cursor-pointer">Cancel</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
