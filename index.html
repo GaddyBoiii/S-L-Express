@@ -242,14 +242,14 @@
     /* ── STATUS BADGES ── */
     .status-badge-container { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem; }
     .status-badge {
-      display: flex; align-items: center; gap: 1rem;
-      padding: 1.5rem; border-radius: 1rem; border: 2px solid;
-      flex: 1; min-width: 200px; transition: all 0.3s ease;
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.875rem 1rem; border-radius: 0.875rem; border: 2px solid;
+      flex: 1; min-width: 140px; transition: all 0.3s ease;
     }
     .status-badge:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-    .status-badge-icon { font-size: 2.5rem; }
-    .status-badge-content h3 { font-size: 0.875rem; font-weight: 500; margin: 0; opacity: 0.8; }
-    .status-badge-content p { font-size: 2rem; font-weight: 700; margin: 0.25rem 0 0 0; }
+    .status-badge-icon { font-size: 1.5rem; }
+    .status-badge-content h3 { font-size: 0.75rem; font-weight: 500; margin: 0; opacity: 0.8; }
+    .status-badge-content p { font-size: 1.5rem; font-weight: 700; margin: 0.15rem 0 0 0; }
     .badge-delivered { background: rgba(16,185,129,0.1); border-color: #10b981; }
     .badge-delivered .status-badge-icon { color: #10b981; }
     .badge-delivered p { color: #10b981; }
@@ -517,11 +517,6 @@
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-0 mb-8 md:mb-10">
         <h1 class="heading-font text-3xl md:text-5xl">Admin Dashboard</h1>
         <button onclick="logoutAdmin()" class="bg-red-600 hover:bg-red-700 px-6 md:px-8 py-2 md:py-3 rounded-2xl transition-all cursor-pointer">Logout</button>
-      </div>
-
-      <div class="mb-6 flex items-center gap-3 bg-zinc-900 p-4 rounded-2xl border border-emerald-500/30">
-        <div class="w-3 h-3 bg-emerald-500 rounded-full live-indicator"></div>
-        <span class="text-sm md:text-base">Real-time updates active | Encrypted connection</span>
       </div>
 
       <!-- STATUS BADGE COUNTERS - NEW FEATURE -->
@@ -869,7 +864,7 @@
       <h2 class="heading-font text-3xl md:text-4xl text-center mb-2">Admin Login</h2>
       <p class="text-zinc-400 text-center text-sm mb-8">Secure Authentication</p>
       
-      <input id="admin-user" type="email" autocomplete="email" placeholder="Email" class="w-full bg-zinc-800 p-3 md:p-5 rounded-2xl mb-4 text-sm md:text-base" autocomplete="off" type="text">
+      <input id="admin-user" type="email" autocomplete="email" placeholder="Username" class="w-full bg-zinc-800 p-3 md:p-5 rounded-2xl mb-4 text-sm md:text-base" autocomplete="off" type="text">
       <input id="admin-pass" type="password" autocomplete="current-password" placeholder="Password" class="w-full bg-zinc-800 p-3 md:p-5 rounded-2xl mb-6 text-sm md:text-base" autocomplete="off" type="password">
       
       <button onclick="loginAdmin()" class="w-full bg-amber-500 hover:bg-amber-600 text-black py-3 md:py-5 rounded-2xl font-bold text-base md:text-lg transition-all cursor-pointer">Login</button>
@@ -919,7 +914,10 @@
       loginAttempts: 0,
       sessionId: null,
       currentAdmin: null,
-      isSessionActive: false
+      isSessionActive: false,
+      branch: null,
+      role: null,
+      activeBranch: 'all'
     };
 
     let shipments = [];
@@ -962,24 +960,37 @@
         admin: securityState.currentAdmin || 'Anonymous',
         action,
         details,
-        session_id: securityState.sessionId
+        session_id: securityState.sessionId,
+        branch: securityState.branch || 'blr'  // AUTO-TAG branch
       };
-      
+
       activityLog.push({ ...logEntry, ipAddress: 'Local' });
-      
       await db.from('activity_logs').insert(logEntry);
-      
-      if (currentParentTab === 3) {
-        renderActivityLog();
-      }
+
+      if (currentParentTab === 3) renderActivityLog();
     }
 
     async function renderActivityLog() {
       const tbody = document.getElementById('activity-body');
       tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-zinc-400 text-sm">Loading...</td></tr>';
 
-      const { data, error } = await db.from('activity_logs').select('*').order('timestamp', { ascending: false }).limit(50);
+      let query = db.from('activity_logs').select('*').order('timestamp', { ascending: false }).limit(50);
+
+      // Branch admins only see their own logs
+      if (securityState.role !== 'super_admin') {
+        query = query.eq('branch', securityState.branch);
+      } else if (securityState.activeBranch && securityState.activeBranch !== 'all') {
+        query = query.eq('branch', securityState.activeBranch);
+      }
+
+      const { data, error } = await query;
       if (error) { tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-red-400">Failed to load logs</td></tr>'; return; }
+
+      const branchBadge = b => b === 'blr'
+        ? '<span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded-full">BLR</span>'
+        : b === 'chennai'
+        ? '<span class="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full">CHN</span>'
+        : '<span class="text-xs bg-zinc-500/20 text-zinc-400 px-2 py-0.5 rounded-full">ALL</span>';
 
       tbody.innerHTML = '';
       (data || []).forEach(log => {
@@ -989,10 +1000,25 @@
             <td class="p-3 text-xs">${sanitizeInput(log.admin)}</td>
             <td class="p-3 text-xs font-semibold text-amber-400">${log.action}</td>
             <td class="p-3 text-xs">${sanitizeInput(log.details)}</td>
-            <td class="p-3 text-xs">Cloud</td>
+            <td class="p-3 text-xs">${branchBadge(log.branch)}</td>
           </tr>
         `;
       });
+    }
+
+    function updateCalcPreview() {
+      const weight = parseFloat(document.getElementById('new-weight').value);
+      const rate = parseFloat(document.getElementById('new-rate').value);
+
+      if (!weight || !rate) {
+        document.getElementById('calc-desc').textContent = 'Enter weight & rate to preview bill amount';
+        document.getElementById('calc-amt').textContent = '—';
+        return;
+      }
+
+      const total = weight * rate;
+      document.getElementById('calc-desc').textContent = `${weight} kg × ₹${rate}/kg`;
+      document.getElementById('calc-amt').textContent = `₹${total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
 
     async function clearActivityLog() {
@@ -1004,6 +1030,52 @@
       }
     }
 
+    function renderBranchSwitcher() {
+      if (document.getElementById('branch-switcher')) return;
+
+      securityState.activeBranch = 'all';
+
+      const switcher = document.createElement('div');
+      switcher.id = 'branch-switcher';
+      switcher.className = 'flex items-center gap-2 bg-zinc-900 border border-amber-500/30 rounded-2xl px-4 py-2 mb-6';
+      switcher.innerHTML = `
+        <i class="fas fa-code-branch text-amber-400 text-sm"></i>
+        <span class="text-xs text-zinc-400 mr-2">Branch:</span>
+        ${['all', 'blr', 'chennai'].map(b => `
+          <button onclick="switchBranch('${b}')" id="branch-btn-${b}"
+            class="branch-btn text-xs px-3 py-1 rounded-xl transition-all ${b === 'all' ? 'bg-amber-500 text-zinc-950 font-bold' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}">
+            ${b === 'all' ? 'All' : b === 'blr' ? 'Bengaluru' : 'Chennai'}
+          </button>
+        `).join('')}
+      `;
+
+      // Insert after the real-time banner
+      const banner = document.querySelector('#admin-panel .mb-6');
+      banner.parentNode.insertBefore(switcher, banner.nextSibling);
+    }
+
+    async function switchBranch(branch) {
+      securityState.activeBranch = branch;
+
+      // Update button styles
+      ['all', 'blr', 'chennai'].forEach(b => {
+        const btn = document.getElementById(`branch-btn-${b}`);
+        btn.className = `branch-btn text-xs px-3 py-1 rounded-xl transition-all ${b === branch ? 'bg-amber-500 text-zinc-950 font-bold' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`;
+      });
+
+      // Re-fetch shipments for selected branch
+      let query = db.from('shipments').select('*').order('created_at', { ascending: false });
+      if (branch !== 'all') query = query.eq('branch', branch);
+      const { data, error } = await query;
+      if (!error && data) {
+        shipments = data.map(s => ({ ...s, custId: s.cust_id }));
+        updateStatusBadges();
+        switchSubTab(0);
+      }
+
+      // Re-render logs if on that tab
+      if (currentParentTab === 3) renderActivityLog();
+    }
     async function downloadActivityLog() {
       const { data } = await db.from('activity_logs').select('*').order('timestamp', { ascending: false });
       let csv = 'Timestamp,Admin,Action,Details\n';
@@ -1394,7 +1466,10 @@
         origin, destination, status, date,
         location: "Initial Pickup",
         history: [{ status, date, location: "Initial Pickup" }],
-        pod_url: null, boxes, weight, rate
+        pod_url: null, boxes, weight, rate,
+        branch: securityState.role === 'super_admin'
+          ? (securityState.activeBranch === 'all' ? 'blr' : securityState.activeBranch)
+          : securityState.branch
       };
 
       const { error } = await db.from('shipments').insert(newShipment);
@@ -1681,47 +1756,62 @@
     }
 
     async function loginAdmin() {
-      const user = sanitizeInput(document.getElementById('admin-user').value).trim().toLowerCase();
+      const email = document.getElementById('admin-user').value.trim();
       const pass = document.getElementById('admin-pass').value;
 
-      const email = document.getElementById('admin-user').value.trim();
-      if (!email || !pass) {
-        showLoginError('Please enter username and password');
-        return;
-      }
-
+      if (!email || !pass) { showLoginError('Please enter username and password'); return; }
       if (securityState.loginAttempts >= SECURITY_CONFIG.maxLoginAttempts) {
-        showLoginError('Too many failed attempts. Please try again later.');
-        return;
+        showLoginError('Too many failed attempts. Please try again later.'); return;
       }
 
-      const { data: authData, error: authError } = await db.auth.signInWithPassword({
-          email: document.getElementById('admin-user').value.trim(),
-          password: pass
-        });
+      const { data: authData, error: authError } = await db.auth.signInWithPassword({ email, password: pass });
 
-        if (!authError && authData.user) {
-          document.getElementById('login-modal').classList.add('hidden');
-          document.getElementById('admin-panel').classList.remove('hidden');
-          
-          startSession(document.getElementById('admin-user').value.trim());
+      if (!authError && authData.user) {
+        // Fetch branch + role from admin_profiles
+        const { data: profile, error: profileError } = await db
+          .from('admin_profiles')
+          .select('branch, role, email')
+          .eq('id', authData.user.id)
+          .single();
+          console.log('user id:', authData.user.id);
+          console.log('profile:', profile);
+          console.log('profile error:', profileError);
 
-          const { data, error: fetchError } = await db.from('shipments').select('*').order('created_at', { ascending: false });
-          if (!fetchError && data) {
-            shipments = data.map(s => ({ ...s, custId: s.cust_id }));
-            console.log("shipments sample:", shipments.slice(0,3).map(s=>({date:s.date, custId:s.custId, cust_id:s.cust_id})));
-          }
+        if (profileError || !profile) {
+          showLoginError('Admin profile not found. Contact super admin.');
+          await db.auth.signOut();
+          return;
+        }
 
-          switchParentTab(0);
-          switchSubTab(0);
-          updateStatusBadges();
-          securityState.loginAttempts = 0;
-        } else {
-          securityState.loginAttempts++;
-          updateLoginAttempts();
-          showLoginError(`Invalid credentials. ${SECURITY_CONFIG.maxLoginAttempts - securityState.loginAttempts} attempts remaining.`);
-          logActivity('FAILED_LOGIN', `Failed login attempt`);
-        } 
+        securityState.branch = profile.branch;
+        securityState.role = profile.role;
+
+        document.getElementById('login-modal').classList.add('hidden');
+        document.getElementById('admin-panel').classList.remove('hidden');
+
+        startSession(email);
+
+        // Fetch shipments filtered by branch (super admin gets all)
+        const query = db.from('shipments').select('*').order('created_at', { ascending: false });
+        if (securityState.role !== 'super_admin') query.eq('branch', securityState.branch);
+        const { data, error: fetchError } = await query;
+        if (!fetchError && data) {
+          shipments = data.map(s => ({ ...s, custId: s.cust_id }));
+        }
+
+        // Inject branch switcher if super admin
+        if (securityState.role === 'super_admin') renderBranchSwitcher();
+
+        switchParentTab(0);
+        switchSubTab(0);
+        updateStatusBadges();
+        securityState.loginAttempts = 0;
+      } else {
+        securityState.loginAttempts++;
+        updateLoginAttempts();
+        showLoginError(`Invalid credentials. ${SECURITY_CONFIG.maxLoginAttempts - securityState.loginAttempts} attempts remaining.`);
+        logActivity('FAILED_LOGIN', `Failed login attempt`);
+      }
     }
 
     function showLoginError(msg) {
@@ -1780,11 +1870,19 @@
     function logoutAdmin() {
       logActivity('LOGOUT', `Admin logged out`);
       securityState.isSessionActive = false;
-      
+      securityState.branch = null;
+      securityState.role = null;
+      securityState.activeBranch = 'all';
+
+      const switcher = document.getElementById('branch-switcher');
+      if (switcher) switcher.remove();
+
       if (analyticsInterval) clearInterval(analyticsInterval);
-      
+
       document.getElementById('admin-panel').classList.add('hidden');
       document.getElementById('security-banner').classList.add('hidden');
+
+      db.auth.signOut();
     }
 
     // ============================================
