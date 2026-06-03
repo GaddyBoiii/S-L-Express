@@ -598,13 +598,33 @@
       </div>
 
       <!-- Add Shipment Tab -->
-      <div id="parent-content-1" class="hidden bg-zinc-900 p-6 md:p-10 rounded-3xl max-w-2xl mx-auto">
-        <h2 class="text-2xl md:text-3xl mb-6 md:mb-8">Create New Shipment</h2>
+      <div id="parent-content-1" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <!-- ADD CLIENT PANEL -->
+        <div class="bg-zinc-900 p-6 rounded-3xl flex flex-col gap-4">
+          <h2 class="text-lg font-semibold text-zinc-200">Add Client</h2>
+          <input id="new-client-id" placeholder="Customer ID (e.g. CUST-001)"
+                class="bg-zinc-800 border border-white/10 focus:border-amber-400/60 p-3 rounded-xl text-sm outline-none transition-colors"
+                autocomplete="off">
+          <input id="new-client-name" placeholder="Customer Name"
+                class="bg-zinc-800 border border-white/10 focus:border-amber-400/60 p-3 rounded-xl text-sm outline-none transition-colors"
+                autocomplete="off">
+          <button onclick="addClient()"
+                  class="bg-amber-500 hover:bg-amber-600 text-black py-2 rounded-xl text-sm font-bold transition-all cursor-pointer">
+            Add Client
+          </button>
+          <div id="client-list" class="mt-2 max-h-64 overflow-y-auto">
+            <p class="text-zinc-600 text-xs text-center py-4">No clients yet</p>
+          </div>
+        </div>
+
+        <!-- CREATE SHIPMENT PANEL -->
+        <div class="md:col-span-2 bg-zinc-900 p-6 md:p-10 rounded-3xl">
+          <h2 class="text-2xl md:text-3xl mb-6 md:mb-8">Create New Shipment</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           <input id="new-tracking" placeholder="Tracking Number" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
           <input id="new-customer" placeholder="Customer Name" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
-          <input id="new-custid"    placeholder="Customer ID (e.g. CUST-001)" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
-          <input id="new-consignee" placeholder="Consignee Name (receiver)"   class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
+          <input id="new-custid" placeholder="Customer ID (e.g. CUST-001)" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" oninput="autofillCustomer()" autocomplete="off">          <input id="new-consignee" placeholder="Consignee Name (receiver)"   class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
           <input id="new-origin" placeholder="Origin City" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
           <input id="new-destination" placeholder="Destination City" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
           <select id="new-status" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base">
@@ -647,8 +667,9 @@
             </div>
           </div>
           <button onclick="addNewShipment()" class="mt-8 md:mt-10 w-full bg-amber-500 hover:bg-amber-600 text-black py-4 md:py-6 rounded-2xl font-bold text-base md:text-lg transition-all cursor-pointer">
-          Create Shipment
+           Create Shipment
           </button>
+        </div>
       </div>
       <!-- ════ TAB 4: BILLING ════ -->
       <div id="parent-content-4" class="hidden">
@@ -945,6 +966,7 @@
     let currentTrackedShipment = null;
     let chartInstances = {};
     let analyticsInterval = null;
+    let clients = []; 
 
   
     let currentParentTab = 0;
@@ -1900,6 +1922,9 @@ function refreshBilling() {
         if (!fetchError && data) {
           shipments = data.map(s => ({ ...s, custId: s.cust_id }));
         }
+        // Fetch clients
+        const { data: clientData } = await db.from('clients').select('*').order('created_at', { ascending: false });
+        if (clientData) clients = clientData;
 
         // Inject branch switcher if super admin
         if (securityState.role === 'super_admin') renderBranchSwitcher();
@@ -1913,6 +1938,66 @@ function refreshBilling() {
         updateLoginAttempts();
         showLoginError(`Invalid credentials. ${SECURITY_CONFIG.maxLoginAttempts - securityState.loginAttempts} attempts remaining.`);
         logActivity('FAILED_LOGIN', `Failed login attempt`);
+      }
+    }
+
+    async function addClient() {
+      const custId = document.getElementById('new-client-id').value.trim().toUpperCase();
+      const name = document.getElementById('new-client-name').value.trim().toUpperCase();
+
+      if (!custId || !name) { alert('Both fields are required'); return; }
+      if (clients.find(c => c.cust_id === custId)) { alert('Customer ID already exists'); return; }
+
+      const branch = securityState.role === 'super_admin'
+        ? (securityState.activeBranch === 'all' ? 'blr' : securityState.activeBranch)
+        : securityState.branch;
+
+      const { data, error } = await db.from('clients').insert({ cust_id: custId, name, branch }).select().single();
+      if (error) { alert('Failed to add client'); return; }
+
+      clients.unshift(data);
+      renderClientList();
+      document.getElementById('new-client-id').value = '';
+      document.getElementById('new-client-name').value = '';
+      logActivity('ADD_CLIENT', `Added client ${name} (${custId})`);
+    }
+
+    async function deleteClient(custId) {
+      if (!confirm(`Remove client ${custId}?`)) return;
+      await db.from('clients').delete().eq('cust_id', custId);
+      clients = clients.filter(c => c.cust_id !== custId);
+      renderClientList();
+      logActivity('DELETE_CLIENT', `Removed client ${custId}`);
+    }
+
+    function renderClientList() {
+      const list = document.getElementById('client-list');
+      if (!clients.length) {
+        list.innerHTML = '<p class="text-zinc-600 text-xs text-center py-4">No clients yet</p>';
+        return;
+      }
+      list.innerHTML = clients.map(c => `
+        <div class="flex items-center justify-between py-2 border-b border-white/5">
+          <div>
+            <span class="text-xs font-mono text-amber-400">${c.cust_id}</span>
+            <span class="text-xs text-zinc-300 ml-3">${c.name}</span>
+          </div>
+          <button onclick="deleteClient('${c.cust_id}')" class="text-zinc-600 hover:text-red-400 transition-all cursor-pointer text-xs">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function autofillCustomer() {
+      const custId = document.getElementById('new-custid').value.trim().toUpperCase();
+      const match = clients.find(c => c.cust_id === custId);
+      const nameInput = document.getElementById('new-customer');
+      if (match) {
+        nameInput.value = match.name;
+        nameInput.classList.add('border-amber-400/60');
+      } else {
+        nameInput.classList.remove('border-amber-400/60');
       }
     }
 
@@ -2319,79 +2404,130 @@ function refreshBilling() {
     // custId = "CUST-001" → export only that client
     // Columns: S/NO, DATE (dd.mm.yyyy), AWB NO, CONSIGNEE, DESTINATION, QTY, WEIGHT, AMOUNT
     // ════════════════════════════════════════════
-    function exportRangeExcel(custId){
+    function exportRangeExcel(custId) {
       const from = document.getElementById("range-from").value;
       const to   = document.getElementById("range-to").value;
-      if(!from || !to){ alert("Please select both start and end dates."); return; }
+      if (!from || !to) { alert("Please select both start and end dates."); return; }
 
-      let ms = shipments.filter(s => {
-        if(!s.date) return false;
-        return s.date >= from && s.date <= to;
-      });
+      let ms = shipments.filter(s => s.date && s.date >= from && s.date <= to);
 
       let clientName = "All Clients";
-      if(custId){
+      if (custId) {
         ms = ms.filter(s => s.custId === custId);
-        const c = CUSTOMERS.find(x => x.custId === custId);
+        const c = clients.find(x => x.cust_id === custId);
         clientName = c ? c.name : custId;
       }
 
-      if(!ms.length){ alert("No shipments found for that date range" + (custId ? " · " + clientName : "")); return; }
+      if (!ms.length) { alert("No shipments found for that date range" + (custId ? " · " + clientName : "")); return; }
 
-      const rows = ms.map((s,i) => ({
-        "S/NO":        i+1,
+      const rows = ms.map((s, i) => ({
+        "S/NO":        i + 1,
         "DATE":        fmtDate(s.date),
         "AWB NO":      s.tracking,
         "CONSIGNEE":   s.consignee || s.customer,
         "DESTINATION": s.destination,
-        "QTY":         s.boxes  || 0,
-        "WEIGHT":      s.weight || 0,
-        "AMOUNT":      (s.weight||0)*(s.rate||0),
+        "QTY":         s.boxes || 0,
+        "WEIGHT (KG)": s.weight || 0,
+        "AMOUNT (₹)":  (s.weight || 0) * (s.rate || 0),
       }));
 
       const ws = XLSX.utils.json_to_sheet(rows);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Shipments");
-      XLSX.writeFile(wb, `SLE_${from}_to_${to}${custId ? "_"+clientName : ""}.xlsx`);
-    }
-    function exportExcel(custId){
-      const monthVal=document.getElementById("bill-month").value;
-      const label=monthLabel(monthVal);
-      let ms=getMonthShipments(monthVal);
-      let clientName="All Clients";
 
-      if(custId){
-        ms=ms.filter(s=>s.custId===custId);
-        const c=CUSTOMERS.find(x=>x.custId===custId);
-        clientName=c?c.name:custId;
+      ws["!cols"] = [
+        { wch: 6 },
+        { wch: 14 },
+        { wch: 16 },
+        { wch: 28 },
+        { wch: 20 },
+        { wch: 8 },
+        { wch: 14 },
+        { wch: 16 },
+      ];
+
+      const range = XLSX.utils.decode_range(ws['!ref']);
+      for (let C = range.s.c; C <= range.e.c; C++) {
+        const cell = ws[XLSX.utils.encode_cell({ r: 0, c: C })];
+        if (cell) cell.s = { font: { bold: true }, alignment: { horizontal: 'center' } };
       }
 
-      if(!ms.length){alert("No shipments to export for "+label+(custId?" · "+clientName:""));return;}
+      for (let R = 1; R <= range.e.r; R++) {
+        [5, 6, 7].forEach(C => {
+          const cell = ws[XLSX.utils.encode_cell({ r: R, c: C })];
+          if (cell) cell.s = { alignment: { horizontal: 'right' } };
+        });
+      }
 
-      // Columns: S/NO, DATE (dd.mm.yyyy), AWB NO, CONSIGNEE, DESTINATION, QTY, WEIGHT, AMOUNT
-      const rows=ms.map((s,i)=>({
-        "S/NO":        i+1,
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, custId ? clientName.substring(0, 28) : "Shipments");
+
+      const fileName = `SLE_${from}_to_${to}${custId ? "_" + clientName.replace(/\s+/g, "_") : ""}.xlsx`;
+      XLSX.writeFile(wb, fileName, { cellStyles: true });
+    }
+    
+    function exportExcel(custId) {
+      const monthVal = document.getElementById("bill-month").value;
+      const label = monthLabel(monthVal);
+      let ms = getMonthShipments(monthVal);
+      let clientName = "All Clients";
+
+      if (custId) {
+        ms = ms.filter(s => s.custId === custId);
+        const c = clients.find(x => x.cust_id === custId) || CUSTOMERS?.find(x => x.custId === custId);
+        clientName = c ? (c.name || c.custId) : custId;
+      }
+
+      if (!ms.length) { alert("No shipments to export for " + label + (custId ? " · " + clientName : "")); return; }
+
+      const rows = ms.map((s, i) => ({
+        "S/NO":        i + 1,
         "DATE":        fmtDate(s.date),
         "AWB NO":      s.tracking,
-        "CONSIGNEE":   s.consignee||s.customer,
+        "CONSIGNEE":   s.consignee || s.customer,
         "DESTINATION": s.destination,
-        "QTY":         s.boxes||0,
-        "WEIGHT":      s.weight||0,
-        "AMOUNT":      (s.weight||0)*(s.rate||0),
+        "QTY":         s.boxes || 0,
+        "WEIGHT (KG)": s.weight || 0,
+        "AMOUNT (₹)":  (s.weight || 0) * (s.rate || 0),
       }));
 
-      const ws=XLSX.utils.json_to_sheet(rows);
+      const ws = XLSX.utils.json_to_sheet(rows);
 
-      // Column widths
-      ws["!cols"]=[{wch:6},{wch:14},{wch:14},{wch:22},{wch:16},{wch:8},{wch:10},{wch:14}];
+      // Wider columns
+      ws["!cols"] = [
+        { wch: 6 },   // S/NO
+        { wch: 14 },  // DATE
+        { wch: 16 },  // AWB NO
+        { wch: 28 },  // CONSIGNEE
+        { wch: 20 },  // DESTINATION
+        { wch: 8 },   // QTY
+        { wch: 14 },  // WEIGHT
+        { wch: 16 },  // AMOUNT
+      ];
 
-      const wb=XLSX.utils.book_new();
-      const sheetName=(custId?clientName.substring(0,28):label);
-      XLSX.utils.book_append_sheet(wb,ws,sheetName);
-      const fileName=custId
-        ? `SLE_Invoice_${clientName.replace(/\s+/g,"_")}_${label.replace(" ","_")}.xlsx`
-        : `SLE_Billing_All_${label.replace(" ","_")}.xlsx`;
-      XLSX.writeFile(wb,fileName);
+      // Bold header row
+      const range = XLSX.utils.decode_range(ws['!ref']);
+      for (let C = range.s.c; C <= range.e.c; C++) {
+        const cell = ws[XLSX.utils.encode_cell({ r: 0, c: C })];
+        if (cell) cell.s = { font: { bold: true }, alignment: { horizontal: 'center' } };
+      }
+
+      // Right-align number columns (QTY, WEIGHT, AMOUNT)
+      for (let R = 1; R <= range.e.r; R++) {
+        [5, 6, 7].forEach(C => {
+          const cell = ws[XLSX.utils.encode_cell({ r: R, c: C })];
+          if (cell) cell.s = { alignment: { horizontal: 'right' } };
+        });
+      }
+
+      const wb = XLSX.utils.book_new();
+      wb.Workbook = { Views: [{ RTL: false }] };
+      const sheetName = custId ? clientName.substring(0, 28) : label;
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+      const fileName = custId
+        ? `SLE_Invoice_${clientName.replace(/\s+/g, "_")}_${label.replace(" ", "_")}.xlsx`
+        : `SLE_Billing_All_${label.replace(" ", "_")}.xlsx`;
+
+      XLSX.writeFile(wb, fileName, { cellStyles: true });
     }
 
     // ════════════════════════════════════════════
