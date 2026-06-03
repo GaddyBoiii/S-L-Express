@@ -239,6 +239,9 @@
     .live-indicator { animation: pulse-glow 2s infinite; }
     .smooth-transition { transition: all 0.3s ease; }
 
+    #activity-body td { vertical-align: top; line-height: 1.6; }
+    #activity-body tr { border-bottom: 1px solid rgba(255,255,255,0.05); }
+
     /* ── STATUS BADGES ── */
     .status-badge-container { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem; }
     .status-badge {
@@ -557,10 +560,17 @@
 
       <!-- Shipments Tab -->
       <div id="parent-content-0">
-        <input id="search-input" placeholder="Search by Tracking Number..." 
-               class="w-full bg-zinc-800 border border-white/20 rounded-2xl px-4 md:px-6 py-3 md:py-4 text-base md:text-lg focus:outline-none focus:border-amber-500 mb-6"
-               onkeyup="renderShipments()"
-               autocomplete="off">
+        <div class="relative flex items-center mb-6">
+          <input id="search-input" placeholder="Search by Tracking Number..." 
+                class="w-full bg-zinc-800 border border-white/20 rounded-2xl px-4 md:px-6 py-3 md:py-4 text-base md:text-lg focus:outline-none focus:border-amber-500"
+                onkeyup="renderShipments()"
+                autocomplete="off">
+          <button id="refresh-shipments-btn" onclick="refreshShipments()" 
+                  class="absolute right-4 text-zinc-500 hover:text-amber-400 transition-all cursor-pointer"
+                  title="Refresh shipments">
+            <i class="fas fa-rotate-right text-sm"></i>
+          </button>
+        </div>
 
         <div class="flex flex-wrap gap-2 md:gap-3 mb-6 md:mb-8 border-b border-white/10 pb-4 overflow-x-auto">
           <button onclick="switchSubTab(0)" id="subtab0" class="sub-tab active px-6 md:px-8 py-2 md:py-3 rounded-2xl bg-amber-500 text-black font-semibold whitespace-nowrap transition-all cursor-pointer">Update</button>
@@ -644,7 +654,14 @@
       <div id="parent-content-4" class="hidden">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div>
-            <h2 class="heading-font text-2xl md:text-3xl text-white">Billing</h2>
+            <div class="flex items-center gap-3">
+              <h2 class="heading-font text-2xl md:text-3xl text-white">Billing</h2>
+              <button id="refresh-billing-btn" onclick="refreshBilling()"
+                      class="text-zinc-500 hover:text-amber-400 transition-all cursor-pointer mt-1"
+                      title="Refresh billing">
+                <i class="fas fa-rotate-right text-sm"></i>
+              </button>
+            </div>
             <p class="text-zinc-500 text-sm mt-1">Monthly client bills · weight × rate /kg</p>
           </div>
           <div class="flex gap-3 items-center flex-wrap">
@@ -691,9 +708,10 @@
                 <div class="text-xs text-zinc-600 mt-1" id="det-cid"></div>
               </div>
               <div class="flex gap-2 flex-wrap items-center">
-                <button onclick="markPaid()"
-                        class="bg-emerald-600 hover:bg-emerald-700 px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer flex items-center gap-1">
-                  <i class="fa-solid fa-check text-xs"></i> Mark paid
+                <button onclick="markPaid()" id="mark-paid-btn"
+                        class="px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer flex items-center gap-1 transition-all bg-emerald-600 hover:bg-emerald-700">
+                  <i class="fa-solid fa-check text-xs"></i>
+                  <span>Mark paid</span>
                 </button>
                 <div class="flex items-center gap-2 bg-zinc-800 border border-white/10 rounded-xl px-3 py-2">
                   <input type="date" id="range-from" class="bg-transparent text-zinc-300 text-xs outline-none cursor-pointer">
@@ -841,11 +859,11 @@
             <table class="w-full text-sm">
               <thead class="bg-zinc-800">
                 <tr>
-                  <th class="p-3 text-left">Timestamp</th>
-                  <th class="p-3 text-left">Admin</th>
-                  <th class="p-3 text-left">Action</th>
+                  <th class="p-3 text-left w-44">Timestamp</th>
+                  <th class="p-3 text-left w-40">Admin</th>
+                  <th class="p-3 text-left w-40">Action</th>
                   <th class="p-3 text-left">Details</th>
-                  <th class="p-3 text-left">IP Address</th>
+                  <th class="p-3 text-left w-24">Branch</th>
                 </tr>
               </thead>
               <tbody id="activity-body" class="divide-y divide-white/10"></tbody>
@@ -922,6 +940,8 @@
 
     let shipments = [];
     let activityLog = [];
+    let deletedShipments = [];   
+    let paidHistory = {};        
     let currentTrackedShipment = null;
     let chartInstances = {};
     let analyticsInterval = null;
@@ -1020,6 +1040,50 @@
       document.getElementById('calc-desc').textContent = `${weight} kg × ₹${rate}/kg`;
       document.getElementById('calc-amt').textContent = `₹${total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
+
+    function showUndoToast(message, onUndo) {
+      const existing = document.getElementById('undo-toast');
+      if (existing) existing.remove();
+
+      const toast = document.createElement('div');
+      toast.id = 'undo-toast';
+      toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-4 bg-zinc-800 border border-white/10 px-5 py-3 rounded-2xl shadow-xl text-sm';
+      toast.innerHTML = `
+        <span class="text-zinc-300">${message}</span>
+        <button id="undo-btn" class="text-amber-400 font-semibold hover:text-amber-300 transition-all cursor-pointer">Undo</button>
+      `;
+      document.body.appendChild(toast);
+
+      const timer = setTimeout(() => toast.remove(), 6000);
+
+      document.getElementById('undo-btn').onclick = () => {
+        clearTimeout(timer);
+        toast.remove();
+        onUndo();
+      };
+    }
+
+    async function refreshShipments() {
+      const btn = document.getElementById('refresh-shipments-btn');
+      btn.classList.add('animate-spin');
+      const query = db.from('shipments').select('*').order('created_at', { ascending: false });
+      if (securityState.role !== 'super_admin') query.eq('branch', securityState.branch);
+      else if (securityState.activeBranch && securityState.activeBranch !== 'all') query.eq('branch', securityState.activeBranch);
+      const { data, error } = await query;
+      if (!error && data) {
+        shipments = data.map(s => ({ ...s, custId: s.cust_id }));
+        renderShipments();
+        updateStatusBadges();
+      }
+      setTimeout(() => btn.classList.remove('animate-spin'), 600);
+    }
+
+function refreshBilling() {
+  const btn = document.getElementById('refresh-billing-btn');
+  btn.classList.add('animate-spin');
+  renderBilling();
+  setTimeout(() => btn.classList.remove('animate-spin'), 600);
+}
 
     async function clearActivityLog() {
       if (confirm("Are you sure? This cannot be undone.")) {
@@ -1367,13 +1431,51 @@
 
     async function deleteShipment(index) {
       if (confirm("Delete this shipment permanently?")) {
-        const trackingNo = shipments[index].tracking;
+        const shipment = shipments[index];
+        const trackingNo = shipment.tracking;
+
+        // Store for undo
+        deletedShipments.push({ shipment, index });
+
         await db.from('shipments').delete().eq('tracking', trackingNo);
         shipments.splice(index, 1);
         saveData();
         logActivity('DELETE_SHIPMENT', `Deleted shipment ${trackingNo}`);
         renderShipments();
+
+        showUndoToast(`Deleted ${trackingNo}`, async () => {
+          // Restore to Supabase
+          const { error } = await db.from('shipments').insert(shipment);
+          if (!error) {
+            shipments.splice(index, 0, shipment);
+            deletedShipments = deletedShipments.filter(d => d.shipment.tracking !== trackingNo);
+            logActivity('RESTORE_SHIPMENT', `Restored shipment ${trackingNo}`);
+            renderShipments();
+          }
+        });
       }
+    }
+
+    function showUndoToast(message, onUndo) {
+      const existing = document.getElementById('undo-toast');
+      if (existing) existing.remove();
+
+      const toast = document.createElement('div');
+      toast.id = 'undo-toast';
+      toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-4 bg-zinc-800 border border-white/10 px-5 py-3 rounded-2xl shadow-xl text-sm';
+      toast.innerHTML = `
+        <span class="text-zinc-300">${message}</span>
+        <button id="undo-btn" class="text-amber-400 font-semibold hover:text-amber-300 transition-all cursor-pointer">Undo</button>
+      `;
+      document.body.appendChild(toast);
+
+      const timer = setTimeout(() => toast.remove(), 6000);
+
+      document.getElementById('undo-btn').onclick = () => {
+        clearTimeout(timer);
+        toast.remove();
+        onUndo();
+      };
     }
 
     async function uploadPOD(e, index) {
@@ -2119,14 +2221,32 @@
       detailCustId=null;
     }
 
-    function markPaid(){
-      const monthVal=document.getElementById("bill-month").value;
-      if(!detailCustId) return;
-      setPayStatus(detailCustId,monthVal,"paid");
-      openBillDetail(detailCustId,monthVal);
+    function markPaid() {
+      const monthVal = document.getElementById("bill-month").value;
+      if (!detailCustId) return;
+
+      const key = `${detailCustId}_${monthVal}`;
+      const prev = paidHistory[key] || 'unpaid';
+      const next = prev === 'paid' ? 'unpaid' : 'paid';
+
+      paidHistory[key] = next;
+      setPayStatus(detailCustId, monthVal, next);
+      openBillDetail(detailCustId, monthVal);
       renderBilling();
-      document.getElementById("bill-list-card").style.display="none";
-      document.getElementById("bill-detail").style.display="block";
+      document.getElementById("bill-list-card").style.display = "none";
+      document.getElementById("bill-detail").style.display = "block";
+
+      // Update button appearance
+      const btn = document.getElementById('mark-paid-btn');
+      if (btn) {
+        if (next === 'paid') {
+          btn.className = 'px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer flex items-center gap-1 transition-all bg-amber-500 hover:bg-amber-600 text-black';
+          btn.innerHTML = '<i class="fa-solid fa-rotate-left text-xs"></i> <span>Mark unpaid</span>';
+        } else {
+          btn.className = 'px-4 py-2 rounded-xl text-xs font-semibold cursor-pointer flex items-center gap-1 transition-all bg-emerald-600 hover:bg-emerald-700';
+          btn.innerHTML = '<i class="fa-solid fa-check text-xs"></i> <span>Mark paid</span>';
+        }
+      }
     }
 
     // ════════════════════════════════════════════
