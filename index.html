@@ -15,6 +15,7 @@
   <title>S.L. Express | Premium Logistics</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -1691,8 +1692,50 @@ function refreshBilling() {
         const localIdx = shipments.findIndex(s => s.tracking === input);
         if (localIdx >= 0) shipments[localIdx] = shipment;
 
-        let statusText = shipment.status.startsWith('Others: ') ? shipment.status.replace('Others: ', '') : shipment.status;
-        let color = (statusText.includes("Delivered")) ? 'text-emerald-400' : 'text-amber-400';
+        const latestHistory = shipment.history && shipment.history.length 
+          ? shipment.history[shipment.history.length - 1] 
+          : null;
+        const rawStatus = latestHistory ? latestHistory.status : shipment.status;
+
+        let statusText, color;
+        if (rawStatus.startsWith('Note: ')) {
+          statusText = rawStatus.replace('Note: ', '');
+          color = 'text-purple-400';
+        } else if (rawStatus === 'Delivered') {
+          statusText = rawStatus;
+          color = 'text-emerald-400';
+        } else if (rawStatus === 'Out for Delivery') {
+          statusText = rawStatus;
+          color = 'text-sky-400';
+        } else if (rawStatus === 'In Transit') {
+          statusText = rawStatus;
+          color = 'text-amber-400';
+        } else {
+          statusText = rawStatus;
+          color = 'text-yellow-400';
+        }
+
+        // Build history timeline
+        const history = shipment.history || [];
+        const timelineHTML = history.length ? `
+          <div class="mt-6 md:mt-8 text-left max-w-md mx-auto">
+            <p class="text-sm font-semibold text-zinc-400 mb-3 uppercase tracking-wider">Tracking History</p>
+            <div class="space-y-3">
+              ${[...history].reverse().map((h, i) => `
+                <div class="flex gap-3 items-start">
+                  <div class="flex flex-col items-center">
+                    <div class="w-2.5 h-2.5 rounded-full mt-1 ${i === 0 ? 'bg-amber-400' : 'bg-zinc-600'}"></div>
+                    ${i < history.length - 1 ? '<div class="w-0.5 h-full bg-zinc-700 mt-1 ml-[4px]"></div>' : ''}
+                  </div>
+                  <div>
+                    <p class="text-sm font-semibold ${i === 0 ? 'text-amber-400' : 'text-zinc-300'}">${sanitizeInput(h.status)}</p>
+                    <p class="text-xs text-zinc-500">${h.date || ''} ${h.location ? '· ' + sanitizeInput(h.location) : ''}</p>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : '';
 
         resultDiv.innerHTML = `
           <p class="text-3xl md:text-5xl font-bold ${color} mb-6 md:mb-10">Status: ${sanitizeInput(statusText)}</p>
@@ -1702,7 +1745,7 @@ function refreshBilling() {
             <p><strong>Date:</strong> ${shipment.date || 'N/A'}</p>
             <p><strong>Location:</strong> ${sanitizeInput(shipment.location) || 'N/A'}</p>
             ${shipment.consignee ? `<p><strong>Consignee:</strong> ${sanitizeInput(shipment.consignee)}</p>` : ''}
-          </div>
+          </div>  
         `;
 
         const podBtn = document.getElementById('pod-btn');
@@ -1717,8 +1760,176 @@ function refreshBilling() {
         document.getElementById('tracking-result').classList.remove('hidden');
         document.getElementById('tracking-result').scrollIntoView({ behavior: 'smooth' });
       } else {
-        alert("No shipment found!");
+        showTrackingError();
+        document.getElementById('public-tracking').classList.add('hidden');
+        document.getElementById('tracking-result').classList.remove('hidden');
+        document.getElementById('tracking-result').scrollIntoView({ behavior: 'smooth' });
       }
+    }
+
+    function showTrackingError() {
+      const resultDiv = document.getElementById('result-main');
+      resultDiv.innerHTML = `
+        <div class="flex flex-col items-center justify-center text-center">
+          <canvas id="fuzzy-404-canvas" style="display:block;margin:0 auto"></canvas>
+          <canvas id="fuzzy-notfound-canvas" style="display:block;margin:0 auto;margin-top:0.5rem"></canvas>
+          <p class="text-zinc-400 text-sm md:text-base mt-6" style="font-family:sans-serif">
+            This shipment doesn't exist. Kindly check the Shipment Number.
+          </p>
+        </div>`;
+
+      const podBtn = document.getElementById('pod-btn');
+      if (podBtn) podBtn.classList.add('hidden');
+
+      initFuzzyText(document.getElementById('fuzzy-404-canvas'), '404', {
+        fontSize: 'clamp(4rem, 15vw, 10rem)',
+        fontWeight: 900,
+        fontFamily: 'sans-serif',  // ADD
+        color: '#fff',
+        baseIntensity: 0.18,
+        hoverIntensity: 0.5,
+        fuzzRange: 30,
+        fps: 60,
+        enableHover: true,
+        clickEffect: true,
+        glitchMode: true,
+        glitchInterval: 2000,
+        glitchDuration: 200,
+      });
+
+      initFuzzyText(document.getElementById('fuzzy-notfound-canvas'), 'not found', {
+        fontSize: 'clamp(1rem, 4vw, 2.5rem)',
+        fontWeight: 700,
+        fontFamily: 'Caveat',  
+        color: '#fff',
+        baseIntensity: 0.12,
+        hoverIntensity: 0.4,
+        fuzzRange: 20,
+        fps: 60,
+        enableHover: true,
+        clickEffect: false,
+        glitchMode: true,
+        glitchInterval: 3000,
+        glitchDuration: 150,
+      });
+    }
+
+    function initFuzzyText(canvas, text, opts = {}) {
+      const {
+        fontSize = 'clamp(2rem, 10vw, 10rem)',
+        fontWeight = 900,
+        fontFamily = 'inherit',
+        color = '#fff',
+        enableHover = true,
+        baseIntensity = 0.18,
+        hoverIntensity = 0.5,
+        fuzzRange = 30,
+        fps = 60,
+        enableHover: _eh,
+        clickEffect = false,
+        glitchMode = false,
+        glitchInterval = 2000,
+        glitchDuration = 200,
+      } = opts;
+
+      let animationFrameId;
+      let glitchTimeoutId, glitchEndTimeoutId, clickTimeoutId;
+      let isCancelled = false;
+
+      const init = async () => {
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const computedFamily = fontFamily === 'inherit'
+          ? window.getComputedStyle(canvas).fontFamily || 'sans-serif'
+          : fontFamily;
+        const fontSizeStr = typeof fontSize === 'number' ? `${fontSize}px` : fontSize;
+
+        try { await document.fonts.load(`${fontWeight} ${fontSizeStr} ${computedFamily}`); }
+        catch { await document.fonts.ready; }
+        if (isCancelled) return;
+
+        let numericFontSize;
+        if (typeof fontSize === 'number') {
+          numericFontSize = fontSize;
+        } else {
+          const temp = document.createElement('span');
+          temp.style.fontSize = fontSize;
+          document.body.appendChild(temp);
+          numericFontSize = parseFloat(window.getComputedStyle(temp).fontSize);
+          document.body.removeChild(temp);
+        }
+
+        const offscreen = document.createElement('canvas');
+        const offCtx = offscreen.getContext('2d');
+        offCtx.font = `${fontWeight} ${fontSizeStr} ${computedFamily}`;
+        offCtx.textBaseline = 'alphabetic';
+
+        const totalWidth = offCtx.measureText(text).width;
+        const metrics = offCtx.measureText(text);
+        const actualLeft = metrics.actualBoundingBoxLeft ?? 0;
+        const actualAscent = metrics.actualBoundingBoxAscent ?? numericFontSize;
+        const actualDescent = metrics.actualBoundingBoxDescent ?? numericFontSize * 0.2;
+        const textBoundingWidth = Math.ceil(actualLeft + (metrics.actualBoundingBoxRight ?? metrics.width));
+        const tightHeight = Math.ceil(actualAscent + actualDescent);
+        const xOffset = 5;
+
+        offscreen.width = textBoundingWidth + 10;
+        offscreen.height = tightHeight;
+        offCtx.font = `${fontWeight} ${fontSizeStr} ${computedFamily}`;
+        offCtx.textBaseline = 'alphabetic';
+        offCtx.fillStyle = color;
+        offCtx.fillText(text, xOffset - actualLeft, actualAscent);
+
+        const horizontalMargin = fuzzRange + 20;
+        canvas.width = offscreen.width + horizontalMargin * 2;
+        canvas.height = tightHeight;
+        ctx.translate(horizontalMargin, 0);
+
+        let isHovering = false, isClicking = false, isGlitching = false;
+        let currentIntensity = baseIntensity, lastFrameTime = 0;
+        const frameDuration = 1000 / fps;
+
+        const startGlitch = () => {
+          if (!glitchMode || isCancelled) return;
+          glitchTimeoutId = setTimeout(() => {
+            if (isCancelled) return;
+            isGlitching = true;
+            glitchEndTimeoutId = setTimeout(() => { isGlitching = false; startGlitch(); }, glitchDuration);
+          }, glitchInterval);
+        };
+        if (glitchMode) startGlitch();
+
+        const run = ts => {
+          if (isCancelled) return;
+          if (ts - lastFrameTime < frameDuration) { animationFrameId = requestAnimationFrame(run); return; }
+          lastFrameTime = ts;
+          ctx.clearRect(-fuzzRange - 20, -fuzzRange - 10, offscreen.width + 2 * (fuzzRange + 20), tightHeight + 2 * (fuzzRange + 10));
+          const target = (isClicking || isGlitching) ? 1 : isHovering ? hoverIntensity : baseIntensity;
+          currentIntensity = target;
+          for (let j = 0; j < tightHeight; j++) {
+            const dx = Math.floor(currentIntensity * (Math.random() - 0.5) * fuzzRange);
+            ctx.drawImage(offscreen, 0, j, offscreen.width, 1, dx, j, offscreen.width, 1);
+          }
+          animationFrameId = requestAnimationFrame(run);
+        };
+        animationFrameId = requestAnimationFrame(run);
+
+        const rect = () => canvas.getBoundingClientRect();
+        canvas.addEventListener('mousemove', e => {
+          const r = rect(); isHovering = true;
+        });
+        canvas.addEventListener('mouseleave', () => { isHovering = false; });
+        if (clickEffect) {
+          canvas.addEventListener('click', () => {
+            isClicking = true;
+            clearTimeout(clickTimeoutId);
+            clickTimeoutId = setTimeout(() => { isClicking = false; }, 150);
+          });
+        }
+      };
+
+      init();
     }
 
     function showPodModalByUrl(url) {
