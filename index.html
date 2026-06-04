@@ -559,19 +559,26 @@
       </div>
 
       <!-- Shipments Tab -->
-      <div id="parent-content-0">
-        <div class="relative flex items-center mb-6">
-          <input id="search-input" placeholder="Search by Tracking Number..." 
-                class="w-full bg-zinc-800 border border-white/20 rounded-2xl px-4 md:px-6 py-3 md:py-4 text-base md:text-lg focus:outline-none focus:border-amber-500"
-                onkeyup="renderShipments()"
-                autocomplete="off">
-          <button id="refresh-shipments-btn" onclick="refreshShipments()" 
-                  class="absolute right-4 text-zinc-500 hover:text-amber-400 transition-all cursor-pointer"
-                  title="Refresh shipments">
-            <i class="fas fa-rotate-right text-sm"></i>
-          </button>
-        </div>
-
+      <div id="parent-content-0" class="hidden">
+        <div class="flex flex-col md:flex-row gap-3 mb-6">
+          <div class="relative flex items-center flex-1">
+            <input id="search-input" placeholder="Search by Tracking Number..."
+              class="w-full bg-zinc-800 border border-white/20 rounded-2xl px-4 md:px-6 py-3 md:py-4 text-base md:text-lg focus:outline-none focus:border-amber-500"
+              onkeyup="renderShipments()"
+              autocomplete="off">
+                  
+            <button id="refresh-shipments-btn" onclick="refreshShipments()" 
+                    class="absolute right-4 text-zinc-500 hover:text-amber-400 transition-all cursor-pointer"
+                    title="Refresh shipments">
+              <i class="fas fa-rotate-right text-sm"></i>
+            </button>
+          </div>
+          <select id="shipment-month-filter"
+                  onchange="onShipmentMonthChange(this.value)"
+                  class="bg-zinc-800 border border-white/10 text-zinc-300 text-sm px-4 py-3 rounded-2xl outline-none focus:border-amber-500 cursor-pointer">
+            <option value="all">All Months</option>
+          </select>
+        </div> 
         <div class="flex flex-wrap gap-2 md:gap-3 mb-6 md:mb-8 border-b border-white/10 pb-4 overflow-x-auto">
           <button onclick="switchSubTab(0)" id="subtab0" class="sub-tab active px-6 md:px-8 py-2 md:py-3 rounded-2xl bg-amber-500 text-black font-semibold whitespace-nowrap transition-all cursor-pointer">Update</button>
           <button onclick="switchSubTab(1)" id="subtab1" class="sub-tab px-6 md:px-8 py-2 md:py-3 rounded-2xl hover:bg-white/10 whitespace-nowrap transition-all cursor-pointer">Pending</button>
@@ -967,10 +974,37 @@
     let chartInstances = {};
     let analyticsInterval = null;
     let clients = []; 
+    let currentShipmentMonth = 'all';
 
   
     let currentParentTab = 0;
     let currentSubTab = 0;
+    // Enter key listeners
+    document.addEventListener('DOMContentLoaded', () => {
+
+      // Login
+      ['admin-user', 'admin-pass'].forEach(id => {
+        document.getElementById(id)?.addEventListener('keydown', e => {
+          if (e.key === 'Enter') loginAdmin();
+        });
+      });
+
+      // Tracking
+      document.getElementById('track-input')?.addEventListener('keydown', e => {
+        if (e.key === 'Enter') performTracking();
+      });
+
+      // Add Shipment — trigger on last field (rate)
+      document.getElementById('new-rate')?.addEventListener('keydown', e => {
+        if (e.key === 'Enter') addNewShipment();
+      });
+
+      // Add Client — trigger on name field
+      document.getElementById('new-client-name')?.addEventListener('keydown', e => {
+        if (e.key === 'Enter') addClient();
+      });
+
+    });
 
     // ============================================
     // IMPORTANT ACTIONS FOR ACTIVITY LOG
@@ -1096,9 +1130,33 @@
         shipments = data.map(s => ({ ...s, custId: s.cust_id }));
         renderShipments();
         updateStatusBadges();
+        populateShipmentMonthFilter();
       }
       setTimeout(() => btn.classList.remove('animate-spin'), 600);
     }
+
+  function populateShipmentMonthFilter() {
+    const select = document.getElementById('shipment-month-filter');
+    if (!select) return;
+
+    // Get unique months from shipments
+    const months = [...new Set(shipments
+      .filter(s => s.date)
+      .map(s => s.date.substring(0, 7))
+    )].sort((a, b) => b.localeCompare(a)); // newest first
+
+    select.innerHTML = '<option value="all">All Months</option>';
+    months.forEach(m => {
+      const [yr, mo] = m.split('-');
+      const label = new Date(yr, mo - 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+      select.innerHTML += `<option value="${m}" ${currentShipmentMonth === m ? 'selected' : ''}>${label}</option>`;
+    });
+  }
+
+  function onShipmentMonthChange(val) {
+    currentShipmentMonth = val;
+    renderShipments();
+  }
 
 function refreshBilling() {
   const btn = document.getElementById('refresh-billing-btn');
@@ -1261,6 +1319,7 @@ function refreshBilling() {
 
       const filtered = shipments.filter(s => {
         if (search && !s.tracking.toUpperCase().includes(search)) return false;
+        if (currentShipmentMonth !== 'all' && (!s.date || !s.date.startsWith(currentShipmentMonth))) return false;
         if (currentSubTab === 0) return !s.pod;
         if (currentSubTab === 1) return s.pod && s.status !== "Delivered";
         if (currentSubTab === 2) return s.pod && s.status === "Delivered";
@@ -1279,28 +1338,35 @@ function refreshBilling() {
             <td class="p-3 md:p-5 hidden sm:table-cell text-xs md:text-sm">${sanitizeInput(s.customer)}</td>
             <td class="p-3 md:p-5 hidden md:table-cell text-xs md:text-sm">${sanitizeInput(s.origin)} → ${sanitizeInput(s.destination)}</td>
             <td class="p-3 md:p-5 text-xs md:text-sm">
-              <div class="flex flex-col gap-2">
-                <select onchange="updateStatus(${idx}, this.value)" class="bg-zinc-800 border border-amber-400 px-2 md:px-4 py-1 md:py-2 rounded-xl text-xs md:text-sm cursor-pointer" id="status-select-${idx}">
-                  <option value="Picked Up" ${s.status==='Picked Up'?'selected':''}>Picked Up</option>
-                  <option value="In Transit" ${s.status==='In Transit'?'selected':''}>In Transit</option>
-                  <option value="Out for Delivery" ${s.status==='Out for Delivery'?'selected':''}>Out</option>
-                  <option value="Delivered" ${s.status==='Delivered'?'selected':''}>Delivered</option>
-                  <option value="Others" ${s.status.startsWith('Others')?'selected':''}>Others</option>
-                </select>
-                ${s.status.startsWith('Others') ? `<input type="text" value="${sanitizeInput(s.status.replace('Others: ',''))}" id="custom-others-${idx}" onchange="updateCustomStatus(${idx}, this.value)" onblur="updateCustomStatus(${idx}, this.value)" placeholder="Custom message" class="bg-zinc-700 border border-yellow-400 p-2 rounded-lg text-xs md:text-sm w-full">` : ''}
-              </div>
+              <span class="px-3 py-1 rounded-xl text-xs font-semibold
+                ${s.status === 'Delivered' ? 'bg-emerald-500/20 text-emerald-400' :
+                  s.status === 'In Transit' ? 'bg-amber-500/20 text-amber-400' :
+                  s.status === 'Out for Delivery' ? 'bg-blue-500/20 text-blue-400' :
+                  s.status === 'Picked Up' ? 'bg-zinc-500/20 text-zinc-400' :
+                  'bg-purple-500/20 text-purple-400'}">
+                ${s.status}
+              </span>
             </td>
             <td class="p-3 md:p-5 hidden lg:table-cell text-xs md:text-sm">${s.date || 'N/A'}</td>
             <td class="p-3 md:p-5 text-xs md:text-sm text-zinc-400">${sanitizeInput(s.location) || 'N/A'}</td>
             <td class="p-3 md:p-5 text-xs md:text-sm">${podDisplay}</td>
             <td class="p-3 md:p-5 text-xs md:text-sm">
-              <div class="flex gap-1 flex-wrap">
-                <button onclick="openStatusUpdateModal(${idx})" class="bg-blue-600 hover:bg-blue-700 px-2 md:px-3 py-1 rounded-lg text-xs transition-all cursor-pointer" title="Update Status with Date & Location">📝</button>
-                <button onclick="deleteShipment(${idx})" class="bg-red-600 hover:bg-red-700 px-2 md:px-3 py-1 rounded-lg text-xs transition-all cursor-pointer" title="Delete">✕</button>
-                <label class="cursor-pointer bg-amber-500 hover:bg-amber-600 px-2 md:px-3 py-1 rounded-lg text-xs font-medium transition-all" title="Upload POD">
-                  📷
+              <div class="flex items-center gap-2">
+                <button onclick="openStatusUpdateModal(${idx})" 
+                        class="bg-blue-600 hover:bg-blue-700 w-8 h-8 rounded-lg transition-all cursor-pointer flex items-center justify-center" 
+                        title="Update Status">
+                  <i class="fas fa-pen text-xs"></i>
+                </button>
+                <label class="cursor-pointer bg-amber-500 hover:bg-amber-600 w-8 h-8 rounded-lg font-medium transition-all flex items-center justify-center" 
+                      title="Upload POD">
+                  <i class="fas fa-camera text-xs"></i>
                   <input type="file" accept="image/*" onchange="uploadPOD(event, ${idx})" class="hidden">
                 </label>
+                <button onclick="deleteShipment(${idx})" 
+                        class="bg-red-600 hover:bg-red-700 w-8 h-8 rounded-lg transition-all cursor-pointer flex items-center justify-center" 
+                        title="Delete">
+                  <i class="fas fa-trash text-xs"></i>
+                </button>
               </div>
             </td>
           </tr>`;
@@ -1453,28 +1519,12 @@ function refreshBilling() {
 
     async function deleteShipment(index) {
       if (confirm("Delete this shipment permanently?")) {
-        const shipment = shipments[index];
-        const trackingNo = shipment.tracking;
-
-        // Store for undo
-        deletedShipments.push({ shipment, index });
-
+        const trackingNo = shipments[index].tracking;
         await db.from('shipments').delete().eq('tracking', trackingNo);
         shipments.splice(index, 1);
         saveData();
         logActivity('DELETE_SHIPMENT', `Deleted shipment ${trackingNo}`);
         renderShipments();
-
-        showUndoToast(`Deleted ${trackingNo}`, async () => {
-          // Restore to Supabase
-          const { error } = await db.from('shipments').insert(shipment);
-          if (!error) {
-            shipments.splice(index, 0, shipment);
-            deletedShipments = deletedShipments.filter(d => d.shipment.tracking !== trackingNo);
-            logActivity('RESTORE_SHIPMENT', `Restored shipment ${trackingNo}`);
-            renderShipments();
-          }
-        });
       }
     }
 
@@ -1619,6 +1669,7 @@ function refreshBilling() {
       const { data: freshData, error: fetchErr } = await db.from('shipments').select('*').order('created_at', { ascending: false });
       if (!fetchErr && freshData) {
         shipments = freshData.map(s => ({ ...s, custId: s.cust_id }));
+        populateShipmentMonthFilter();
       }
     }
 
@@ -1921,6 +1972,7 @@ function refreshBilling() {
         const { data, error: fetchError } = await query;
         if (!fetchError && data) {
           shipments = data.map(s => ({ ...s, custId: s.cust_id }));
+          populateShipmentMonthFilter(); 
         }
         // Fetch clients
         const { data: clientData } = await db.from('clients').select('*').order('created_at', { ascending: false });
