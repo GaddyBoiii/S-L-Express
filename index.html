@@ -611,7 +611,7 @@
         <!-- ADD CLIENT PANEL -->
         <div class="bg-zinc-900 p-6 rounded-3xl flex flex-col gap-4">
           <h2 class="text-lg font-semibold text-zinc-200">Add Client</h2>
-          <input id="new-client-id" placeholder="Customer ID (e.g. CUST-001)"
+          <input id="new-client-id" placeholder="Customer ID"
                 class="bg-zinc-800 border border-white/10 focus:border-amber-400/60 p-3 rounded-xl text-sm outline-none transition-colors"
                 autocomplete="off">
           <input id="new-client-name" placeholder="Customer Name"
@@ -630,9 +630,9 @@
         <div class="md:col-span-2 bg-zinc-900 p-6 md:p-10 rounded-3xl">
           <h2 class="text-2xl md:text-3xl mb-6 md:mb-8">Create New Shipment</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-          <input id="new-tracking" placeholder="Tracking Number" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
-          <input id="new-customer" placeholder="Customer Name" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
-          <input id="new-custid" placeholder="Customer ID (e.g. CUST-001)" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" oninput="autofillCustomer()" autocomplete="off">          <input id="new-consignee" placeholder="Consignee Name (receiver)"   class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
+          <input id="new-tracking" placeholder="Tracking/AWB Number" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
+          <input id="new-customer" placeholder="Customer/Consignor" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
+          <input id="new-custid" placeholder="Customer ID" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" oninput="autofillCustomer()" autocomplete="off">          <input id="new-consignee" placeholder="Consignee Name (receiver)"   class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
           <input id="new-origin" placeholder="Origin City" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
           <input id="new-destination" placeholder="Destination City" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
           <select id="new-status" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base">
