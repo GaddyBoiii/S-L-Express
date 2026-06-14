@@ -351,6 +351,302 @@
 
     /* ══ STATISTICS ══ */
     .stat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:1rem; margin-bottom:1.5rem; }
+      /* ── Admin panel base ── */
+      #admin-panel {
+        background: #0D0D0D !important;
+      }
+
+      /* ── Status badge counters (top of admin) ── */
+      .badge-delivered {
+        background: rgba(44, 95, 74, 0.15) !important;
+        border-color: #2C5F4A !important;
+      }
+      .badge-delivered .status-badge-icon { color: #6BA889 !important; }
+      .badge-delivered p { color: #6BA889 !important; }
+      .badge-delivered h3 { color: #4A8A6A !important; }
+
+      .badge-intransit {
+        background: rgba(42, 63, 111, 0.15) !important;
+        border-color: #2A3F6F !important;
+      }
+      .badge-intransit .status-badge-icon { color: #7A9CC4 !important; }
+      .badge-intransit p { color: #7A9CC4 !important; }
+      .badge-intransit h3 { color: #5A7CA4 !important; }
+
+      .badge-pending {
+        background: rgba(92, 74, 30, 0.15) !important;
+        border-color: #5C4A1E !important;
+      }
+      .badge-pending .status-badge-icon { color: #9C8A5C !important; }
+      .badge-pending p { color: #9C8A5C !important; }
+      .badge-pending h3 { color: #7C6A3C !important; }
+
+      /* ── Billing pills ── */
+      .pill-paid    { background: rgba(44,95,74,0.15)  !important; border: 1px solid #2C5F4A !important; color: #6BA889 !important; }
+      .pill-pending { background: rgba(92,74,30,0.15)  !important; border: 1px solid #5C4A1E !important; color: #9C8A5C !important; }
+      .pill-draft   { background: rgba(60,48,32,0.15)  !important; border: 1px solid #3D3020 !important; color: #7C6A50 !important; }
+
+      /* ── Parent tab buttons ── */
+      .parent-tab {
+        background: transparent !important;
+        color: #5C5C5C !important;
+        border: 0.5px solid #1E1E1E !important;
+      }
+      .parent-tab.active {
+        background: rgba(201, 168, 76, 0.1) !important;
+        color: #C9A84C !important;
+        border-color: #C9A84C !important;
+      }
+      .parent-tab:hover:not(.active) {
+        background: #141414 !important;
+        color: #A89880 !important;
+      }
+
+      /* ── Admin heading ── */
+      #admin-panel h1 {
+        color: #F5F0E8 !important;
+      }
+
+      /* ── Search/filter inputs ── */
+      #admin-panel input,
+      #admin-panel select {
+        background: #141414 !important;
+        border-color: #2A2A2A !important;
+        color: #A89880 !important;
+      }
+
+      /* ── Table rows ── */
+      #admin-panel table tbody tr {
+        border-bottom-color: #1A1A1A !important;
+      }
+      #admin-panel table tbody tr:hover {
+        background: #141414 !important;
+      }
+      #admin-panel table th {
+        color: #5C5C5C !important;
+        border-bottom-color: #1E1E1E !important;
+      }
+      #admin-panel table td {
+        color: #A89880 !important;
+      }
+      .ripple-btn {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ripple-btn span.rpl {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      height: 28px;
+      width: 28px;
+      background-color: #C9A84C;
+      border-radius: 50%;
+      opacity: 0.18;
+      transition: 0.6s ease;
+      pointer-events: none;
+    }
+
+    .ripple-btn span.rpl:nth-child(1) { transform: translate(-3.3em, -4em); }
+    .ripple-btn span.rpl:nth-child(2) { transform: translate(-6em, 1.3em); }
+    .ripple-btn span.rpl:nth-child(3) { transform: translate(-.2em, 1.8em); }
+    .ripple-btn span.rpl:nth-child(4) { transform: translate(3.5em, 1.4em); }
+    .ripple-btn span.rpl:nth-child(5) { transform: translate(3.5em, -3.8em); }
+
+    .ripple-btn:hover span.rpl {
+      transform: translate(-50%, -50%) scale(4);
+      transition: 1.5s ease;
+      opacity: 0.22;
+    }
+
+    .ripple-btn .rpl-label {
+      position: relative;
+      z-index: 1;
+    }
+  
+    /* ══ AMBER → MUTED GOLD + CREAM TEXT OVERRIDES ══ */
+
+    /* All solid amber buttons → muted gold */
+    #admin-panel .bg-amber-500,
+    #admin-panel .bg-amber-600 {
+      background-color: #C9A84C !important;
+    }
+    #admin-panel .bg-amber-500:hover,
+    #admin-panel .bg-amber-600:hover,
+    #admin-panel .hover\:bg-amber-600:hover,
+    #admin-panel .hover\:bg-amber-400:hover {
+      background-color: #B8960A !important;
+    }
+
+    /* Active tab gold */
+    #admin-panel .parent-tab.active,
+    #admin-panel .sub-tab.active {
+      background-color: #C9A84C !important;
+      color: #0D0D0D !important;
+    }
+
+    /* Branch switcher active button */
+    #admin-panel .branch-btn.bg-amber-500 {
+      background-color: #C9A84C !important;
+      color: #0D0D0D !important;
+    }
+
+    /* Amber text → muted gold */
+    #admin-panel .text-amber-400,
+    #admin-panel .text-amber-500,
+    #admin-panel .text-amber-300 {
+      color: #C9A84C !important;
+    }
+    #admin-panel .hover\:text-amber-400:hover,
+    #admin-panel .hover\:text-amber-300:hover {
+      color: #B8960A !important;
+    }
+
+    /* Amber borders/focus rings */
+    #admin-panel .border-amber-400,
+    #admin-panel .border-amber-500 {
+      border-color: #C9A84C !important;
+    }
+    #admin-panel .focus\:border-amber-400\/60:focus,
+    #admin-panel .focus\:border-amber-500:focus {
+      border-color: rgba(201,168,76,0.6) !important;
+    }
+
+    /* All general text → cream */
+    #admin-panel {
+      color: #F5F0E8 !important;
+    }
+
+    /* Secondary/muted text → warm grey */
+    #admin-panel .text-zinc-300,
+    #admin-panel .text-zinc-400,
+    #admin-panel .text-zinc-500 {
+      color: #A89880 !important;
+    }
+
+    /* 3 action icon buttons (edit, status, delete) → cream */
+    #admin-panel .icon-action {
+      color: #F5F0E8 !important;
+    }
+    #admin-panel .icon-action:hover {
+      color: #C9A84C !important;
+      background: rgba(201,168,76,0.1) !important;
+    }
+
+    /* Blue action buttons (status update) → gold-bordered dark */
+    #admin-panel .bg-blue-600,
+    #admin-panel .bg-blue-700 {
+      background-color: #1A1A1A !important;
+      border: 0.5px solid #C9A84C !important;
+      color: #C9A84C !important;
+    }
+    #admin-panel .bg-blue-600:hover,
+    #admin-panel .hover\:bg-blue-700:hover {
+      background-color: #C9A84C !important;
+      color: #0D0D0D !important;
+    }
+
+    /* POD upload label (styled as button) */
+    #admin-panel label.bg-amber-500 {
+      background-color: #C9A84C !important;
+    }
+    #admin-panel label.bg-amber-500:hover,
+    #admin-panel label.hover\:bg-amber-600:hover {
+      background-color: #B8960A !important;
+    }
+
+    /* ══ FINAL ADMIN OVERRIDES — GOLD, CREAM, BURGUNDY ══ */
+
+    /* Active tabs → gold bg, dark brown text */
+    #admin-panel .parent-tab.active,
+    #admin-panel .sub-tab.active {
+      background-color: #C9A84C !important;
+      color: #1A1200 !important;
+    }
+
+    /* All solid amber/gold buttons → muted gold bg, dark brown text */
+    #admin-panel .bg-amber-500,
+    #admin-panel .bg-amber-600 {
+      background-color: #C9A84C !important;
+      color: #1A1200 !important;
+    }
+    #admin-panel .bg-amber-500:hover,
+    #admin-panel .bg-amber-600:hover,
+    #admin-panel .hover\:bg-amber-600:hover,
+    #admin-panel .hover\:bg-amber-400:hover {
+      background-color: #B8960A !important;
+      color: #1A1200 !important;
+    }
+
+    /* Branch switcher active button */
+    #admin-panel .branch-btn.bg-amber-500 {
+      background-color: #C9A84C !important;
+      color: #1A1200 !important;
+    }
+
+    /* POD upload label (styled as button) */
+    #admin-panel label.bg-amber-500 {
+      background-color: #C9A84C !important;
+      color: #1A1200 !important;
+    }
+    #admin-panel label.bg-amber-500:hover,
+    #admin-panel label.hover\:bg-amber-600:hover {
+      background-color: #B8960A !important;
+    }
+
+    /* Amber text (non-button) → muted gold */
+    #admin-panel .text-amber-400,
+    #admin-panel .text-amber-500,
+    #admin-panel .text-amber-300 {
+      color: #C9A84C !important;
+    }
+    #admin-panel .hover\:text-amber-400:hover,
+    #admin-panel .hover\:text-amber-300:hover {
+      color: #B8960A !important;
+    }
+
+    /* Amber borders/focus rings */
+    #admin-panel .border-amber-400,
+    #admin-panel .border-amber-500 {
+      border-color: #C9A84C !important;
+    }
+    #admin-panel .focus\:border-amber-400\/60:focus,
+    #admin-panel .focus\:border-amber-500:focus {
+      border-color: rgba(201,168,76,0.6) !important;
+    }
+
+    /* 3 action icon buttons (edit, status, delete) → cream */
+    #admin-panel .icon-action {
+      color: #F5F0E8 !important;
+    }
+    #admin-panel .icon-action:hover {
+      color: #C9A84C !important;
+      background: rgba(201,168,76,0.1) !important;
+    }
+
+    /* Blue status-update icon button → dark gold-bordered, cream icon */
+    #admin-panel .bg-blue-600,
+    #admin-panel .bg-blue-700 {
+      background-color: #1A1A1A !important;
+      border: 0.5px solid #C9A84C !important;
+      color: #F5F0E8 !important;
+    }
+    #admin-panel .bg-blue-600:hover,
+    #admin-panel .hover\:bg-blue-700:hover {
+      background-color: #C9A84C !important;
+      color: #1A1200 !important;
+    }
+
+    /* "No POD" text → burgundy (matches Returned badge) */
+    #admin-panel .text-red-400 {
+      color: #B07070 !important;
+    }
+
+    /* text-black on gold buttons → dark brown for better contrast */
+    #admin-panel .text-black {
+      color: #1A1200 !important;
+    }
   </style>
 </head>
 <body class="bg-zinc-950 text-white">
@@ -1299,6 +1595,7 @@ function refreshBilling() {
       if (n === 5) {
       renderStatistics();
       }
+      setTimeout(injectRippleButtons, 150);
     }
 
     function switchSubTab(n) {
@@ -1310,6 +1607,7 @@ function refreshBilling() {
         else btn.classList.remove('active', 'bg-amber-500', 'text-black');
       });
       renderShipments();
+      setTimeout(injectRippleButtons, 150);
     }
 
     function renderShipments() {
@@ -1331,7 +1629,7 @@ function refreshBilling() {
         const idx = shipments.findIndex(item => item.tracking === s.tracking);
         const podDisplay = s.pod 
           ? `<button onclick="showPodModal(${idx})" class="text-emerald-400 hover:text-emerald-300 font-semibold transition-all cursor-pointer">📷 View POD</button>` 
-          : `<span class="text-red-400 font-semibold">❌ No POD</span>`;
+          : `<span class="text-red-400 font-semibold">No POD</span>`;
 
         tbody.innerHTML += `
           <tr class="hover:bg-zinc-800 smooth-transition">
@@ -1339,12 +1637,15 @@ function refreshBilling() {
             <td class="p-3 md:p-5 hidden sm:table-cell text-xs md:text-sm">${sanitizeInput(s.customer)}</td>
             <td class="p-3 md:p-5 hidden md:table-cell text-xs md:text-sm">${sanitizeInput(s.origin)} → ${sanitizeInput(s.destination)}</td>
             <td class="p-3 md:p-5 text-xs md:text-sm">
-              <span class="px-3 py-1 rounded-xl text-xs font-semibold
-                ${s.status === 'Delivered' ? 'bg-emerald-500/20 text-emerald-400' :
-                  s.status === 'In Transit' ? 'bg-amber-500/20 text-amber-400' :
-                  s.status === 'Out for Delivery' ? 'bg-blue-500/20 text-blue-400' :
-                  s.status === 'Picked Up' ? 'bg-zinc-500/20 text-zinc-400' :
-                  'bg-purple-500/20 text-purple-400'}">
+              <span class="px-3 py-1 rounded-xl text-xs font-semibold"
+                style="${
+                  s.status === 'Delivered'        ? 'background:rgba(44,95,74,0.2);color:#6BA889;border:1px solid #2C5F4A' :
+                  s.status === 'In Transit'       ? 'background:rgba(42,63,111,0.2);color:#7A9CC4;border:1px solid #2A3F6F' :
+                  s.status === 'Out for Delivery' ? 'background:rgba(30,50,80,0.2);color:#7EB8D4;border:1px solid #1E4060' :
+                  s.status === 'Pending'          ? 'background:rgba(92,74,30,0.2);color:#9C8A5C;border:1px solid #5C4A1E' :
+                  s.status === 'Returned'         ? 'background:rgba(107,30,30,0.2);color:#B07070;border:1px solid #6B1E1E' :
+                                                    'background:rgba(60,48,32,0.2);color:#7C6A50;border:1px solid #3D3020'
+                }">
                 ${s.status}
               </span>
             </td>
@@ -1569,7 +1870,7 @@ function refreshBilling() {
       const fileName = `${shipments[index].tracking}_${Date.now()}.${ext}`;
 
       const { error: uploadError } = await db.storage.from('pod-images').upload(fileName, file);
-      if (uploadError) { alert('❌ Upload failed: ' + uploadError.message); return; }
+      if (uploadError) { alert('Upload failed: ' + uploadError.message); return; }
 
       const { data: urlData } = db.storage.from('pod-images').getPublicUrl(fileName);
       const publicUrl = urlData.publicUrl;
@@ -1581,7 +1882,7 @@ function refreshBilling() {
       saveData();
       logActivity('UPLOAD_POD', `Uploaded POD for shipment ${shipments[index].tracking}`);
       renderShipments();
-      alert("✅ POD uploaded!");
+      alert("POD uploaded!");
     }
 
     function showPodModal(index) {
@@ -1627,7 +1928,7 @@ function refreshBilling() {
       logActivity('DELETE_POD', `Deleted POD for shipment ${shipments[index].tracking}`);
       document.getElementById('pod-modal').classList.add('hidden');
       renderShipments();
-      alert('✅ POD deleted!');
+      alert('POD deleted!');
     }
 
     function closePodModal() {
@@ -1642,7 +1943,7 @@ function refreshBilling() {
       }
       
       if (shipments.some(s => s.tracking.toUpperCase() === tracking.toUpperCase())) {
-        alert("❌ Tracking number already exists! Please use a different number.");
+        alert("Tracking number already exists! Please use a different number.");
         return;
       }
 
@@ -1673,7 +1974,7 @@ function refreshBilling() {
       };
 
       const { error } = await db.from('shipments').insert(newShipment);
-      if (error) { alert("❌ Failed to create shipment: " + error.message); return; }
+      if (error) { alert("Failed to create shipment: " + error.message); return; }
 
       shipments.push({ ...newShipment, pod: null });
       saveData();
@@ -1691,7 +1992,7 @@ function refreshBilling() {
       document.getElementById('calc-desc').textContent = 'Enter weight & rate to preview bill amount';
       document.getElementById('calc-amt').textContent = '—';
       renderShipments();
-      alert("✅ Shipment created!");
+      alert("Shipment created");
       const { data: freshData, error: fetchErr } = await db.from('shipments').select('*').order('created_at', { ascending: false });
       if (!fetchErr && freshData) {
         shipments = freshData.map(s => ({ ...s, custId: s.cust_id }));
@@ -2199,6 +2500,7 @@ function refreshBilling() {
 
         document.getElementById('login-modal').classList.add('hidden');
         document.getElementById('admin-panel').classList.remove('hidden');
+        setTimeout(injectRippleButtons, 100);
 
         startSession(email);
 
@@ -2380,8 +2682,8 @@ function refreshBilling() {
         dateField.value = today;
       }
       
-      console.log('✅ S.L. Express Ready');
-      console.log('✓ All systems online');
+      console.log('S.L. Express Ready');
+      console.log('All systems online');
     };
   </script>
 
@@ -2964,6 +3266,45 @@ function refreshBilling() {
         if(progress<1) requestAnimationFrame(step);
       }
       requestAnimationFrame(step);
+    }
+
+    function injectRippleButtons() {
+      const adminPanel = document.getElementById('admin-panel');
+      if (!adminPanel) return;
+
+      // Target only solid action buttons — skip icon-only, text-link, close (×) buttons
+      const skipClasses = ['icon-action', 'text-amber-400', 'text-zinc-400', 'text-zinc-500', 'text-emerald-400', 'text-red-400'];
+      const skipText = ['×', '←', 'Undo', 'Forgot Password', 'Back to Login'];
+
+      const buttons = adminPanel.querySelectorAll('button');
+
+      buttons.forEach(btn => {
+        // Skip if already injected
+        if (btn.classList.contains('ripple-btn')) return;
+
+        // Skip icon-only or text-link buttons
+        const cls = btn.className || '';
+        if (skipClasses.some(c => cls.includes(c))) return;
+        const txt = btn.textContent.trim();
+        if (skipText.some(t => txt.includes(t))) return;
+        if (txt.length < 2) return; // icon-only (×, ←)
+
+        // Wrap existing content in label span
+        const label = document.createElement('span');
+        label.className = 'rpl-label';
+        label.innerHTML = btn.innerHTML;
+        btn.innerHTML = '';
+
+        // Inject 5 ripple spans
+        for (let i = 0; i < 5; i++) {
+          const s = document.createElement('span');
+          s.className = 'rpl';
+          btn.appendChild(s);
+        }
+
+        btn.appendChild(label);
+        btn.classList.add('ripple-btn');
+      });
     }
   </script>
   <div class="edit-modal" id="edit-modal">
