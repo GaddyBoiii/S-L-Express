@@ -2274,3 +2274,21 @@
     color: rgba(244,235,208,0.6);
     vertical-align: middle;
   }
+
+  /* ── Tactile press feedback */
+  .cta-btn:active,
+  .quote-btn:active,
+  .admin-btn:active,
+  .rail-btn:active,
+  .modal-submit:active,
+  .modal-choice-card:active,
+  .modal-close:active,
+  .tr-btn:active,
+  .track-pod-btn:active,
+  .pill-select-btn:active,
+  button:active {
+    transform: scale(0.96);
+    filter: brightness(0.92);
+    transition: transform 0.1s ease, filter 0.1s ease;
+  }
+
