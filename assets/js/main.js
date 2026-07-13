@@ -3374,7 +3374,7 @@ void main() {
   document.addEventListener('click', (e) => {
     const target = e.target.closest('button, .cta-btn, .rail-btn, .modal-choice-card, .tr-btn');
     if (target && navigator.vibrate) {
-      navigator.vibrate(10);
+      navigator.vibrate(40);
     }
   });
 
