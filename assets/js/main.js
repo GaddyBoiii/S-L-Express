@@ -2487,11 +2487,11 @@ void main() {
         if (!heading) return;
 
         if (securityState.role === 'super_admin') {
-          heading.textContent = 'Welcome Gaddy';
+          heading.textContent = 'Welcome, Gaddy';
         } else if (securityState.branch === 'blr') {
-          heading.textContent = 'Bengaluru Admin';
+          heading.textContent = 'Welcome, Bengaluru';
         } else if (securityState.branch === 'chennai') {
-          heading.textContent = 'Chennai Admin';
+          heading.textContent = 'Welcome, Chennai';
         } else {
           heading.textContent = 'Admin Dashboard';
         }
