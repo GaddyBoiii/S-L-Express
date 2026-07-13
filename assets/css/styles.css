@@ -48,7 +48,7 @@
       align-items: center;
     }
     .logo img {
-      height: 32px;
+      height: 64px;
       width: auto;
       display: block;
       filter: drop-shadow(0 2px 20px rgba(0,0,0,0.8));
@@ -141,7 +141,7 @@
         gap: 12px;
         position: fixed;
         right: 0;
-        top: 50%;
+        top: 22%;
         transform: translateY(-50%);
         z-index: 250;
       }
@@ -460,22 +460,6 @@
       line-height: 1.1;
       letter-spacing: -0.5px;
       margin-bottom: 20px;
-    }
-
-    /* Gold word with brown stroke — used in services heading */
-    .word-express {
-      color: var(--gold);
-      -webkit-text-stroke: 1.5px #251c18;
-      text-stroke: 1.5px #251c18;
-      display: inline;
-    }
-
-    /* Same but for light background (p2 section uses #f4ebd0 bg) */
-    .word-express-dark {
-      color: var(--gold);
-      -webkit-text-stroke: 1.5px #251c18;
-      text-stroke: 1.5px #251c18;
-      display: inline;
     }
 
     /* Hero h1 gold underline span */
