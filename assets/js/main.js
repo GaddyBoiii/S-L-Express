@@ -1,5 +1,3 @@
-// ── SHARED VISIBILITY FLAGS — lets expensive WebGL loops skip rendering
-// when their section is nowhere near the viewport, instead of running forever. ──
 window.__heroVisible = true;
 (function() {
   const heroEl = document.getElementById('globe-sticky');
@@ -16,9 +14,6 @@ if (window.gsap && window.ScrollTrigger) {
   console.warn('GSAP/ScrollTrigger failed to load — hero entrance & scroll-linked animations disabled, rest of the page continues normally.');
 }
 
-// ============================================================
-// LOADER — hide immediately on DOM ready, independent of CDN
-// ============================================================
 (function() {
   function hideLoader() {
     const loader = document.getElementById('loader');
@@ -43,9 +38,14 @@ if (window.gsap && window.ScrollTrigger) {
   }
 })();
 
-// ============================================================
+const logoHomeLink = document.getElementById('logoHomeLink');
+if (logoHomeLink) logoHomeLink.addEventListener('click', e => {
+  e.preventDefault();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
 // AURORA BACKGROUND
-// ============================================================
+
 (function() {
   const canvas = document.getElementById('aurora-canvas');
   const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
@@ -1553,7 +1553,7 @@ void main() {
         else if (securityState.activeBranch && securityState.activeBranch !== 'all') query.eq('branch', securityState.activeBranch);
         const { data, error } = await query;
         if (!error && data) {
-          shipments = data.map(s => ({ ...s, custId: s.cust_id }));
+          shipments = data.map(s => ({ ...s, custId: s.cust_id, pod: s.pod_url }));
           renderShipments();
           updateStatusBadges();
           populateShipmentMonthFilter();
@@ -1638,7 +1638,7 @@ void main() {
         if (branch !== 'all') query = query.eq('branch', branch);
         const { data, error } = await query;
         if (!error && data) {
-          shipments = data.map(s => ({ ...s, custId: s.cust_id }));
+          shipments = data.map(s => ({ ...s, custId: s.cust_id, pod: s.pod_url }));
           updateStatusBadges();
           switchSubTab(0);
         }
@@ -2124,7 +2124,7 @@ void main() {
         alert("Shipment created");
         const { data: freshData, error: fetchErr } = await db.from('shipments').select('*').order('created_at', { ascending: false });
         if (!fetchErr && freshData) {
-          shipments = freshData.map(s => ({ ...s, custId: s.cust_id }));
+          shipments = freshData.map(s => ({ ...s, custId: s.cust_id, pod: s.pod_url }));
           populateShipmentMonthFilter();
         }
       }
@@ -2393,6 +2393,7 @@ void main() {
       // ============================================
 
       function showAdminLogin() {
+        document.getElementById('progress-bar').style.display = 'none';
         document.getElementById('login-modal').classList.remove('hidden');
         document.getElementById('login-form').classList.remove('hidden');
         document.getElementById('forgot-password-form').classList.add('hidden');
@@ -2403,6 +2404,7 @@ void main() {
       }
 
       function closeAdminLogin() {
+        document.getElementById('progress-bar').style.display = 'block';
         document.getElementById('login-modal').classList.add('hidden');
       }
 
@@ -2459,11 +2461,13 @@ void main() {
           if (securityState.role !== 'super_admin') query.eq('branch', securityState.branch);
           const { data, error: fetchError } = await query;
           if (!fetchError && data) {
-            shipments = data.map(s => ({ ...s, custId: s.cust_id }));
+            shipments = data.map(s => ({ ...s, custId: s.cust_id, pod: s.pod_url }));
             populateShipmentMonthFilter(); 
           }
           // Fetch clients
-          const { data: clientData } = await db.from('clients').select('*').order('created_at', { ascending: false });
+          const clientQuery = db.from('clients').select('*').order('created_at', { ascending: false });
+          if (securityState.role !== 'super_admin') clientQuery.eq('branch', securityState.branch);
+          const { data: clientData } = await clientQuery;
           if (clientData) clients = clientData;
           renderClientList();
 
@@ -2532,17 +2536,27 @@ void main() {
           list.innerHTML = '<p class="text-zinc-600 text-xs text-center py-4">No clients yet</p>';
           return;
         }
-        list.innerHTML = clients.map(c => `
-          <div class="flex items-center justify-between py-2 border-b border-white/5">
-            <div>
-              <span class="text-xs font-mono text-amber-400">${c.cust_id}</span>
-              <span class="text-xs text-zinc-300 ml-3">${c.name}</span>
+        const isSuperAdmin = securityState.role === 'super_admin';
+        list.innerHTML = clients.map(c => {
+          const branchColour = c.branch === 'blr'
+            ? 'color:#7A9CC4;border:1px solid #2A3F6F;background:rgba(42,63,111,0.15)' 
+            : 'color:#B07FD4;border:1px solid #6B3F8F;background:rgba(107,63,143,0.15)'; 
+          const branchPill = isSuperAdmin
+            ? `<span class="text-xs font-mono px-2 py-0.5 rounded-full ml-2" style="${branchColour}">${c.branch === 'blr' ? 'BLR' : 'CHE'}</span>`
+            : '';
+          return `
+            <div class="flex items-center justify-between py-2 border-b border-white/5">
+              <div class="flex items-center flex-wrap gap-1">
+                <span class="text-xs font-mono" style="color:#C9A84C">${c.cust_id}</span>
+                <span class="text-xs text-zinc-300 ml-2">${c.name}</span>
+                ${branchPill}
+              </div>
+              <button onclick="deleteClient('${c.cust_id}')" class="text-zinc-600 hover:text-red-400 transition-all cursor-pointer text-xs">
+                <i class="fas fa-times"></i>
+              </button>
             </div>
-            <button onclick="deleteClient('${c.cust_id}')" class="text-zinc-600 hover:text-red-400 transition-all cursor-pointer text-xs">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
-        `).join('');
+          `;
+        }).join('');
       }
 
       function autofillCustomer() {
@@ -2611,6 +2625,8 @@ void main() {
       }
 
       function logoutAdmin() {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+        document.getElementById('progress-bar').style.display = 'block';
         logActivity('LOGOUT', `Admin logged out`);
         securityState.isSessionActive = false;
         securityState.branch = null;
@@ -3353,4 +3369,12 @@ void main() {
       });
     }
   })();
+
+  // ── Haptic feedback on tap
+  document.addEventListener('click', (e) => {
+    const target = e.target.closest('button, .cta-btn, .rail-btn, .modal-choice-card, .tr-btn');
+    if (target && navigator.vibrate) {
+      navigator.vibrate(10);
+    }
+  });
 
