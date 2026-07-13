@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FAQs — S.L. Express</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #EAB308;
+    --bg: #07080f;
+    --text: #f4ebd0;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+  }
+  header {
+    padding: 28px 36px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(244,235,208,0.08);
+  }
+  .brand {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    letter-spacing: 0.02em;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .brand span { color: var(--gold); }
+  .back-link {
+    color: rgba(244,235,208,0.55);
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: color 0.2s ease;
+  }
+  .back-link:hover { color: var(--gold); }
+
+  main {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 64px 24px 100px;
+  }
+  .tag {
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.75rem;
+    color: var(--gold);
+    margin: 0 0 14px;
+  }
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 5vw, 2.8rem);
+    margin: 0 0 12px;
+  }
+  .intro {
+    color: rgba(244,235,208,0.55);
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0 0 48px;
+    max-width: 56ch;
+  }
+
+  .faq-item {
+    border-bottom: 1px solid rgba(244,235,208,0.1);
+  }
+  .faq-q {
+    width: 100%;
+    background: none;
+    border: none;
+    text-align: left;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 1.02rem;
+    font-weight: 600;
+    padding: 22px 36px 22px 0;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s ease;
+  }
+  .faq-q:hover { color: var(--gold); }
+  .faq-q::after {
+    content: '+';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.4rem;
+    color: var(--gold);
+    transition: transform 0.25s ease;
+  }
+  .faq-item.open .faq-q::after { transform: translateY(-50%) rotate(45deg); }
+
+  .faq-a {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    color: rgba(244,235,208,0.6);
+    font-size: 0.95rem;
+    line-height: 1.65;
+  }
+  .faq-item.open .faq-a {
+    max-height: 320px;
+    padding-bottom: 22px;
+  }
+
+  .contact-note {
+    margin-top: 56px;
+    padding: 24px 28px;
+    border-radius: 14px;
+    background: rgba(244,235,208,0.03);
+    border: 1px solid rgba(234,179,8,0.15);
+    font-size: 0.9rem;
+    color: rgba(244,235,208,0.6);
+  }
+  .contact-note a { color: var(--gold); text-decoration: none; }
+  .contact-note a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+  <header>
+    <a class="brand" href="globe_35_5_20_17_5.html">S.L. <span>Express</span></a>
+    <a class="back-link" href="globe_35_5_20_17_5.html">&larr; Back to site</a>
+  </header>
+
+  <main>
+    <p class="tag">Support</p>
+    <h1>Frequently Asked Questions</h1>
+    <p class="intro">Can't find what you're looking for? Reach out and we'll help directly.</p>
+
+    <div id="faq-list">
+      <div class="faq-item">
+        <button class="faq-q">What logistics services does S.L. Express offer?</button>
+        <div class="faq-a">We handle domestic courier and freight, international shipping to 190+ countries, and dedicated B2B logistics support for businesses with ongoing shipping needs.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Which cities and regions do you currently serve?</button>
+        <div class="faq-a">We operate 58 branches and work with 194 business associates across India, with head offices in Bengaluru and Chennai, alongside international coverage to 190+ countries.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">How can I book a shipment?</button>
+        <div class="faq-a">Use the Business Enquiry button on the homepage and choose "Ship a Parcel." Our team will follow up with rates and pickup details.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">What information is required to book a shipment?</button>
+        <div class="faq-a">We'll need your name and contact details, pickup and delivery addresses, and the approximate weight and nature of the shipment to give you an accurate quote.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">What types of goods can you transport?</button>
+        <div class="faq-a">We transport documents, personal parcels, commercial consignments, and bulk business shipments, both domestically and internationally.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Are there any items you cannot transport?</button>
+        <div class="faq-a">Certain restricted, hazardous, or prohibited items cannot be shipped under courier regulations. Full details are listed in our Terms and Conditions, or you can check with our team before booking.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">How are shipping charges calculated?</button>
+        <div class="faq-a">Charges are based on shipment weight and the agreed rate per kg, with adjustments for destination and service type. Business clients are billed monthly.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Do you handle both commercial and bulk shipments?</button>
+        <div class="faq-a">Yes. Alongside single parcel shipments, we support businesses with recurring volume and bulk consignments through our B2B logistics service.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">How long will my shipment take to arrive?</button>
+        <div class="faq-a">Delivery times depend on origin, destination, and service selected. Same day and next day options are available for urgent shipments.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Can I schedule shipments in advance?</button>
+        <div class="faq-a">Yes, pickups and shipments can be planned ahead of time, which is especially useful for recurring business shipping needs.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">How can I track my shipment?</button>
+        <div class="faq-a">Use the Track Shipment button on the homepage and enter your AWB or tracking number to see live status at every checkpoint.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Do you provide door to door delivery services?</button>
+        <div class="faq-a">Yes, we offer door to door pickup and delivery for both domestic and international shipments.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">What should I do if I need to change the delivery address after booking?</button>
+        <div class="faq-a">Contact our support team as soon as possible with your AWB number. We'll do our best to update the address before the shipment reaches its final delivery stage.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">What happens if the recipient is unavailable during delivery?</button>
+        <div class="faq-a">Our team will attempt redelivery or coordinate an alternate time with the recipient. You can also reach out to support to arrange this directly.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Is my shipment insured during transit?</button>
+        <div class="faq-a">Insurance options are available depending on the shipment type and value. Speak with our team when booking to arrange the right level of cover.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">What should I do if my shipment is delayed, damaged, or lost?</button>
+        <div class="faq-a">Contact our support team with your AWB number right away. We'll investigate and keep you updated until it's resolved.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Do you provide Proof of Delivery (POD)?</button>
+        <div class="faq-a">Yes, Proof of Delivery is captured through the recipient's signature at the time of delivery, and a copy can be shared with you on request through our support team or your account manager.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Can businesses partner with S.L. Express for regular logistics requirements?</button>
+        <div class="faq-a">Yes. Use the Business Enquiry button and choose "Partner with Us" to reach our business team about recurring volume, franchise, or account based logistics support.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Can I transport fragile or high value goods with S.L. Express?</button>
+        <div class="faq-a">Yes, we handle fragile and high value shipments with additional care and packaging guidance. Let our team know in advance so we can prepare accordingly.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Do you provide GST compliant invoices for businesses?</button>
+        <div class="faq-a">Yes, GST compliant invoices are provided for all business shipments and monthly billing cycles.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">How can I contact customer support?</button>
+        <div class="faq-a">Reach us at <a href="mailto:slexpress15@gmail.com">slexpress15@gmail.com</a>, by phone or WhatsApp through our Bengaluru or Chennai offices, or via the Business Enquiry button on the homepage.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">What makes S.L. Express different from other logistics providers?</button>
+        <div class="faq-a">Since 1982, we've built our name on shipments that arrive when we say they will, backed by a wide network of 58 branches and 194 associates and true end to end tracking.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Why should I choose S.L. Express for my shipping needs?</button>
+        <div class="faq-a">Over four decades of reliability, nationwide and international reach, transparent tracking, and a team that treats every shipment with the same care we'd want for our own.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Can I get a customized logistics solution for my business?</button>
+        <div class="faq-a">Yes. Our B2B logistics service includes dedicated account management, so we can build a shipping plan around your business's specific volume and timeline needs.</div>
+      </div>
+    </div>
+
+
+    <div class="contact-note">
+      Still have a question? Reach us at <a href="mailto:slexpress15@gmail.com">slexpress15@gmail.com</a> or <a href="mailto:slexpressbng@gmail.com">slexpressbng@gmail.com</a> or use the Business Enquiry option on the homepage.
+    </div>
+  </main>
+
+  <script>
+    document.querySelectorAll('.faq-item').forEach(item => {
+      const q = item.querySelector('.faq-q');
+      q.addEventListener('click', () => {
+        const isOpen = item.classList.contains('open');
+        document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+        if (!isOpen) item.classList.add('open');
+      });
+    });
+  </script>
+
+</body>
+</html>
