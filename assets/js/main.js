@@ -520,8 +520,10 @@ if (logoHomeLink) logoHomeLink.addEventListener('click', e => {
       }, { passive: true });
     })();
 
-    // ── ANIMATION LOOP ──
     const clock = new THREE.Clock();
+
+    let smoothTiltX = 0, smoothTiltY = 0;
+    let dragRotationY = 0, dragRotationX = 0;
 
     function animate() {
       requestAnimationFrame(animate);
@@ -534,12 +536,15 @@ if (logoHomeLink) logoHomeLink.addEventListener('click', e => {
 
       // BASE auto-rotation
       globe.rotation.y += 0.0018;
-      arcGroup.rotation.y += 0.0018;
-      dotGroup.rotation.y = arcGroup.rotation.y;
 
-      // SCROLL-DRIVEN rotation
-      globe.rotation.x = scrollProgress * Math.PI * 0.4 - 0.25;
+      // SCROLL-DRIVEN rotation + manual drag offset
+      globe.rotation.x = scrollProgress * Math.PI * 0.4 - 0.25 + dragRotationX;
+      globe.rotation.y += dragRotationY * 0.02; 
+      dragRotationY *= 0.95; 
+
+      arcGroup.rotation.y = globe.rotation.y;
       arcGroup.rotation.x = globe.rotation.x;
+      dotGroup.rotation.y = arcGroup.rotation.y;
       dotGroup.rotation.x = globe.rotation.x;
 
       // Animate package dots
@@ -556,8 +561,13 @@ if (logoHomeLink) logoHomeLink.addEventListener('click', e => {
       const camZ = 3.2 + scrollProgress * 1.2 - Math.pow(scrollProgress, 3) * 1.8;
       camera.position.z += (camZ - camera.position.z) * 0.05;
 
-      // Camera slight Y drift
-      camera.position.y = Math.sin(t * 0.15) * 0.08 - scrollProgress * 0.3;
+      // Smooth the raw gyroscope input so it doesn't feel jittery
+      smoothTiltX += ((window.heroTiltX || 0) - smoothTiltX) * 0.05;
+      smoothTiltY += ((window.heroTiltY || 0) - smoothTiltY) * 0.05;
+
+      // Camera slight Y drift + tilt parallax
+      camera.position.y = Math.sin(t * 0.15) * 0.08 - scrollProgress * 0.3 + smoothTiltY * 0.3;
+      camera.position.x = smoothTiltX * 0.3;
       camera.lookAt(0, 0, 0);
 
       // Atmosphere glow pulse
@@ -575,6 +585,38 @@ if (logoHomeLink) logoHomeLink.addEventListener('click', e => {
     }
 
     animate();
+
+    // Darg to rotate globe ──
+    (function() {
+      let isDragging = false;
+      let lastX = 0, lastY = 0;
+
+      canvas.addEventListener('pointerdown', (e) => {
+        isDragging = true;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        canvas.style.cursor = 'grabbing';
+      });
+
+      window.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - lastX;
+        const dy = e.clientY - lastY;
+        lastX = e.clientX;
+        lastY = e.clientY;
+
+        dragRotationY += dx * 0.005;
+        dragRotationX += dy * 0.005;
+        dragRotationX = Math.max(-1, Math.min(1, dragRotationX));
+      });
+
+      window.addEventListener('pointerup', () => {
+        isDragging = false;
+        canvas.style.cursor = 'grab';
+      });
+
+      canvas.style.cursor = 'grab';
+    })();
 
 
     // ── MAGNETIC ADMIN BUTTON ──
@@ -3374,7 +3416,55 @@ void main() {
   document.addEventListener('click', (e) => {
     const target = e.target.closest('button, .cta-btn, .rail-btn, .modal-choice-card, .tr-btn');
     if (target && navigator.vibrate) {
-      navigator.vibrate(40);
+      navigator.vibrate(10);
     }
   });
+
+  // ── Gyroscope tilt/parallax on hero globe ──
+  (function() {
+    const canvas = document.getElementById('globe-canvas'); 
+    if (!canvas) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    let tiltX = 0, tiltY = 0;
+
+    function applyTilt(gamma, beta) {
+      // gamma: left-right tilt (-90 to 90), beta: front-back tilt (-180 to 180)
+      tiltX = Math.max(-1, Math.min(1, gamma / 30));
+      tiltY = Math.max(-1, Math.min(1, (beta - 45) / 30)); 
+      window.heroTiltX = tiltX;
+      window.heroTiltY = tiltY;
+    }
+
+    function startListening() {
+      window.addEventListener('deviceorientation', (e) => {
+        applyTilt(e.gamma || 0, e.beta || 0);
+      });
+    }
+
+    const needsPermission = typeof DeviceOrientationEvent !== 'undefined'
+      && typeof DeviceOrientationEvent.requestPermission === 'function';
+
+    if (!needsPermission) {
+      startListening();
+      return;
+    }
+
+    const prompt = document.createElement('button');
+    prompt.textContent = 'Tap to enable tilt effect';
+    prompt.className = 'tilt-permission-btn';
+    document.body.appendChild(prompt);
+
+    prompt.addEventListener('click', async () => {
+      try {
+        const result = await DeviceOrientationEvent.requestPermission();
+        if (result === 'granted') {
+          startListening();
+        }
+      } catch (err) {
+        console.warn('Motion permission denied or unavailable:', err);
+      }
+      prompt.remove();
+    });
+  })();
 
