@@ -566,8 +566,8 @@ if (logoHomeLink) logoHomeLink.addEventListener('click', e => {
       smoothTiltY += ((window.heroTiltY || 0) - smoothTiltY) * 0.05;
 
       // Camera slight Y drift + tilt parallax
-      camera.position.y = Math.sin(t * 0.15) * 0.08 - scrollProgress * 0.3 + smoothTiltY * 0.3;
-      camera.position.x = smoothTiltX * 0.3;
+      camera.position.y = Math.sin(t * 0.15) * 0.08 - scrollProgress * 0.3 + smoothTiltY * 0.6;
+      camera.position.x = smoothTiltX * 0.6;
       camera.lookAt(0, 0, 0);
 
       // Atmosphere glow pulse
