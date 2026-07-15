@@ -273,6 +273,9 @@ if (logoHomeLink) logoHomeLink.addEventListener('click', e => {
       specular: new THREE.Color(0.1, 0.1, 0.1),
     });
 
+    globeMat.map.generateMipmaps = false;
+    globeMat.map.minFilter = THREE.LinearFilter;
+
     const globe = new THREE.Mesh(globeGeo, globeMat);
     scene.add(globe);
 
