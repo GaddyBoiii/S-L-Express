@@ -311,6 +311,8 @@ if (logoHomeLink) logoHomeLink.addEventListener('click', e => {
         globeMat.map.dispose();
         globeMat.map = makeGlobeTexture({ landFeatures, indiaFeature });
         globeMat.map.needsUpdate = true;
+        globeMat.map.generateMipmaps = false;      
+        globeMat.map.minFilter = THREE.LinearFilter;  
       })
       .catch(() => {});
 
