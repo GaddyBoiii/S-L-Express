@@ -314,7 +314,9 @@ if (logoHomeLink) logoHomeLink.addEventListener('click', e => {
         globeMat.map.generateMipmaps = false;      
         globeMat.map.minFilter = THREE.LinearFilter;  
       })
-      .catch(() => {});
+      .catch(() => {
+         console.error('Globe texture failed to load/render:', err);
+      });
 
     // ── ATMOSPHERE GLOW ──
     const atmoGeo = new THREE.SphereGeometry(RADIUS * 1.08, 64, 64);
