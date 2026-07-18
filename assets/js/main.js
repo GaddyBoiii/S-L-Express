@@ -340,6 +340,7 @@ if (logoHomeLink) logoHomeLink.addEventListener('click', e => {
         varying float intensity;
         void main() {
           vec3 glow = glowColor * intensity;
+          float clampedIntensity = clamp(intensity, 0.0, 1.0);
           gl_FragColor = vec4(glow, intensity * 0.65);
         }
       `
