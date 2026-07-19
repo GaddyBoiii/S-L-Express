@@ -1754,7 +1754,12 @@
     .stat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:1rem; margin-bottom:1.5rem; }
       /* ── Admin panel base ── */
       #admin-panel {
-        background: #0D0D0D !important;
+        background-color: #09090b !important;
+        --grid-color: rgba(234,179,8,0.05);
+        background-image:
+          linear-gradient(0deg, transparent 24%, var(--grid-color) 25%, var(--grid-color) 26%, transparent 27%, transparent 74%, var(--grid-color) 75%, var(--grid-color) 76%, transparent 77%, transparent),
+          linear-gradient(90deg, transparent 24%, var(--grid-color) 25%, var(--grid-color) 26%, transparent 27%, transparent 74%, var(--grid-color) 75%, var(--grid-color) 76%, transparent 77%, transparent) !important;
+        background-size: 55px 55px !important;
       }
 
       /* ── Status badge counters (top of admin) ── */
@@ -2309,3 +2314,147 @@
     cursor: pointer;
     box-shadow: 0 10px 30px rgba(0,0,0,0.4);
   }
+
+  #admin-panel input[type="date"]::-webkit-calendar-picker-indicator,
+  #status-update-modal input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(94%) sepia(11%) saturate(400%) hue-rotate(315deg) brightness(101%) contrast(96%);
+    cursor: pointer;
+  }
+  
+  .tab-underline {
+    position: absolute;
+    bottom: 0;
+    height: 4px;
+    background: linear-gradient(to right, var(--gold), #f97316);
+    border-radius: 2px;
+    transition: left 0.3s ease-in-out, width 0.3s ease-in-out;
+    z-index: 1;
+  }
+
+  .tab-underline {
+    position: absolute;
+    bottom: 6px;
+    height: 3px;
+    background: linear-gradient(to right, var(--gold), #f97316);
+    border-radius: 2px;
+    transition: left 0.3s ease-in-out, width 0.3s ease-in-out;
+    z-index: 1;
+  }
+
+  #search-input {
+    background: rgba(255,255,255,0.03) !important;
+    border: none !important;
+    outline: none !important;
+    border-radius: 9999px !important;
+    box-shadow: inset 2px 5px 10px rgba(5,5,5,0.6) !important;
+    color: #f4ebd0 !important;
+  }
+  #search-input::placeholder { color: rgba(244,235,208,0.28) !important; }
+  #search-input:focus {
+    box-shadow: inset 2px 5px 10px rgba(5,5,5,0.6), 0 0 0 1.5px rgba(234,179,8,0.5) !important;
+  }
+
+  #shipment-month-filter {
+    background: rgba(255,255,255,0.03) !important;
+    border: none !important;
+    outline: none !important;
+    border-radius: 9999px !important;
+    box-shadow: inset 2px 5px 10px rgba(5,5,5,0.6) !important;
+    color: #f4ebd0 !important;
+  }
+
+  .logout-fab-btn {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: 42px;
+    height: 42px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition-duration: 0.3s;
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.35);
+    background-color: rgb(255, 65, 65);
+  }
+  .logout-fab-sign {
+    width: 100%;
+    transition-duration: 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+  .logout-fab-text {
+    position: absolute;
+    right: 0%;
+    width: 0%;
+    opacity: 0;
+    color: white;
+    font-size: 0.9em;
+    font-weight: 600;
+    transition-duration: 0.3s;
+    white-space: nowrap;
+  }
+  .logout-fab-btn:hover {
+    width: 125px;
+    border-radius: 40px;
+    transition-duration: 0.3s;
+  }
+  .logout-fab-btn:hover .logout-fab-sign {
+    width: 30%;
+    transition-duration: 0.3s;
+    padding-left: 20px;
+  }
+  .logout-fab-btn:hover .logout-fab-text {
+    opacity: 1;
+    width: 70%;
+    transition-duration: 0.3s;
+    padding-right: 10px;
+  }
+  .logout-fab-btn:active { transform: translate(2px, 2px); }
+
+  .row-action-group { display: flex; align-items: center; gap: 8px; }
+
+  .action-edit-btn, .action-pod-btn, .action-delete-btn {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 20px rgba(0,0,0,0.16);
+    cursor: pointer;
+    transition: width 0.3s, border-radius 0.3s, background-color 0.3s, opacity 0.3s, margin 0.3s;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .action-edit-btn { background-color: rgb(37,99,235); }
+  .action-pod-btn  { background-color: rgb(217,119,6); }
+  .action-delete-btn { background-color: rgb(220,38,38); }
+
+  .action-edit-btn .edit-svgIcon, .action-pod-btn .edit-svgIcon, .action-delete-btn .svgIcon {
+    width: 14px;
+    transition-duration: 0.3s;
+  }
+  .action-edit-btn .edit-svgIcon path, .action-pod-btn .edit-svgIcon path, .action-delete-btn .svgIcon path { fill: white; }
+
+  .action-edit-btn:hover, .action-pod-btn:hover { width: 100px; border-radius: 50px; background-color: rgb(255,69,69); }
+  .action-delete-btn:hover { width: 110px; border-radius: 50px; background-color: rgb(255,69,69); }
+  .action-edit-btn:hover .edit-svgIcon, .action-pod-btn:hover .edit-svgIcon { transform: rotate(360deg); }
+  .action-delete-btn:hover .svgIcon { width: 40px; transform: translateY(60%); }
+
+  .action-edit-btn::before, .action-pod-btn::before { content: 'Edit'; color: white; font-size: 0; transition-duration: 0.3s; white-space: nowrap; }
+  .action-pod-btn::before { content: 'Attach POD'; }
+  .action-edit-btn:hover::before, .action-pod-btn:hover::before { padding-left: 8px; font-size: 12px; }
+
+  .action-delete-btn::before { position: absolute; top: -20px; content: 'Delete'; color: white; font-size: 2px; transition-duration: 0.3s; }
+  .action-delete-btn:hover::before { top: auto; font-size: 12px; opacity: 1; transform: translateY(30px); }
+
+  .row-action-group .action-squeeze { width: 0 !important; opacity: 0; margin: 0 !important; pointer-events: none; }
+
+
+
+
