@@ -680,7 +680,16 @@
 
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-0 mb-8 md:mb-10">
         <h1 id="dashboard-heading" class="heading-font text-3xl md:text-5xl">Admin Dashboard</h1>
-        <button onclick="logoutAdmin()" class="bg-red-600 hover:bg-red-700 px-6 md:px-8 py-2 md:py-3 rounded-2xl transition-all cursor-pointer">Logout</button>
+        <button onclick="logoutAdmin()" class="logout-fab-btn">
+          <span class="logout-fab-sign">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M16 17l5-5-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span class="logout-fab-text">Logout</span>
+        </button>
       </div>
 
       <!-- STATUS BADGE COUNTERS - NEW FEATURE -->
@@ -711,7 +720,8 @@
       </div>
 
       <div class="flex flex-col md:flex-row gap-3 mb-8 overflow-x-auto">
-        <button onclick="switchParentTab(0)" id="parent0" class="parent-tab active px-6 md:px-10 py-3 md:py-4 bg-amber-500 text-black font-semibold rounded-2xl whitespace-nowrap transition-all cursor-pointer">Shipments</button>
+        <span class="tab-underline" id="parentTabUnderline"></span>
+        <button onclick="switchParentTab(0)" id="parent0" class="parent-tab active px-6 md:px-10 py-3 md:py-4 text-black font-semibold rounded-2xl whitespace-nowrap transition-all cursor-pointer">Shipments</button>
         <button onclick="switchParentTab(1)" id="parent1" class="parent-tab px-6 md:px-10 py-3 md:py-4 hover:bg-white/10 rounded-2xl whitespace-nowrap transition-all cursor-pointer">Add Shipment</button>
         <button onclick="switchParentTab(2)" id="parent2" class="parent-tab px-6 md:px-10 py-3 md:py-4 hover:bg-white/10 rounded-2xl whitespace-nowrap transition-all cursor-pointer">Analytics</button>
         <button onclick="switchParentTab(3)" id="parent3" class="parent-tab px-6 md:px-10 py-3 md:py-4 hover:bg-white/10 rounded-2xl whitespace-nowrap transition-all cursor-pointer">Activity Log</button>
@@ -741,7 +751,8 @@
           </select>
         </div> 
         <div class="flex flex-wrap gap-2 md:gap-3 mb-6 md:mb-8 border-b border-white/10 pb-4 overflow-x-auto">
-          <button onclick="switchSubTab(0)" id="subtab0" class="sub-tab active px-6 md:px-8 py-2 md:py-3 rounded-2xl bg-amber-500 text-black font-semibold whitespace-nowrap transition-all cursor-pointer">Update</button>
+          <span class="tab-underline" id="subTabUnderline"></span>
+          <button onclick="switchSubTab(0)" id="subtab0" class="sub-tab active px-6 md:px-8 py-2 md:py-3 rounded-2xl text-black font-semibold whitespace-nowrap transition-all cursor-pointer">Update</button>
           <button onclick="switchSubTab(1)" id="subtab1" class="sub-tab px-6 md:px-8 py-2 md:py-3 rounded-2xl hover:bg-white/10 whitespace-nowrap transition-all cursor-pointer">Pending</button>
           <button onclick="switchSubTab(2)" id="subtab2" class="sub-tab px-6 md:px-8 py-2 md:py-3 rounded-2xl hover:bg-white/10 whitespace-nowrap transition-all cursor-pointer">Delivered</button>
         </div>
@@ -1120,8 +1131,6 @@
       <path d="M8 1v14M2 9l6 6 6-6" stroke="rgba(244,235,208,0.5)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
   </div>
-  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-  <script>eruda.init();</script>
 <script src="assets/js/main.js"></script>
 
 </body>
