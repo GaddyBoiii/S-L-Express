@@ -273,9 +273,6 @@ if (logoHomeLink) logoHomeLink.addEventListener('click', e => {
       specular: new THREE.Color(0.1, 0.1, 0.1),
     });
 
-    globeMat.map.generateMipmaps = false;
-    globeMat.map.minFilter = THREE.LinearFilter;
-
     const globe = new THREE.Mesh(globeGeo, globeMat);
     scene.add(globe);
 
@@ -1753,8 +1750,10 @@ void main() {
         
         currentParentTab = n;
         document.querySelectorAll('.parent-tab').forEach((btn, i) => {
-          if (i === n) btn.classList.add('active', 'bg-amber-500', 'text-black');
-          else btn.classList.remove('active', 'bg-amber-500', 'text-black');
+          if (i === n) btn.classList.add('active');
+          else btn.classList.remove('active');
+          restyleTabPills();
+          updateParentUnderline();
         });
         
         for (let i = 0; i < 6; i++) {
@@ -1782,8 +1781,10 @@ void main() {
         document.getElementById('search-input').value = '';
         
         document.querySelectorAll('.sub-tab').forEach((btn, i) => {
-          if (i === n) btn.classList.add('active', 'bg-amber-500', 'text-black');
-          else btn.classList.remove('active', 'bg-amber-500', 'text-black');
+          if (i === n) btn.classList.add('active',);
+          else btn.classList.remove('active');
+          restyleTabPills();
+          updateSubUnderline();
         });
         renderShipments();
         setTimeout(injectRippleButtons, 150);
@@ -1792,6 +1793,20 @@ void main() {
       function renderShipments() {
         if (currentParentTab !== 0) return;
         const search = sanitizeInput(document.getElementById('search-input').value).toUpperCase();
+        if (search) {
+          const match = shipments.find(s => s.tracking.toUpperCase().includes(search));
+          if (match) {
+            const matchTab = !match.pod ? 0 : (match.status !== 'Delivered' ? 1 : 2);
+            if (matchTab !== currentSubTab) {
+              currentSubTab = matchTab;
+              document.querySelectorAll('.sub-tab').forEach((btn, i) => {
+                btn.classList.toggle('active', i === matchTab);
+              });
+              restyleTabPills();
+              updateSubUnderline();
+            }
+          }
+        }
         const tbody = document.getElementById('shipments-body');
         tbody.innerHTML = '';
 
@@ -1810,8 +1825,13 @@ void main() {
             ? `<button onclick="showPodModal(${idx})" class="text-emerald-400 hover:text-emerald-300 font-semibold transition-all cursor-pointer">📷 View POD</button>` 
             : `<span class="text-red-400 font-semibold">No POD</span>`;
 
-          tbody.innerHTML += `
-            <tr class="hover:bg-zinc-800 smooth-transition">
+          const branchTint = securityState.role !== 'super_admin' ? ''
+          : s.branch === 'blr' ? 'background: rgba(59,130,246,0.08);'
+          : s.branch === 'chennai' ? 'background: rgba(168,85,247,0.08);'
+          : '';
+
+        tbody.innerHTML += `
+          <tr class="hover:bg-zinc-800 smooth-transition" style="${branchTint}">
               <td class="p-3 md:p-5 font-mono text-xs md:text-sm">${sanitizeInput(s.tracking)}</td>
               <td class="p-3 md:p-5 hidden sm:table-cell text-xs md:text-sm">${sanitizeInput(s.customer)}</td>
               <td class="p-3 md:p-5 hidden md:table-cell text-xs md:text-sm">${sanitizeInput(s.origin)} → ${sanitizeInput(s.destination)}</td>
@@ -1832,21 +1852,16 @@ void main() {
               <td class="p-3 md:p-5 text-xs md:text-sm text-zinc-400">${sanitizeInput(s.location) || 'N/A'}</td>
               <td class="p-3 md:p-5 text-xs md:text-sm">${podDisplay}</td>
               <td class="p-3 md:p-5 text-xs md:text-sm">
-                <div class="flex items-center gap-2">
-                  <button onclick="openStatusUpdateModal(${idx})" 
-                          class="bg-blue-600 hover:bg-blue-700 w-8 h-8 rounded-lg transition-all cursor-pointer flex items-center justify-center" 
-                          title="Update Status">
-                    <i class="fas fa-pen text-xs"></i>
+                <div class="row-action-group">
+                  <button onclick="openStatusUpdateModal(${idx})" class="action-edit-btn" title="Update Status">
+                    <svg class="edit-svgIcon" viewBox="0 0 512 512"><path d="M410.3 231l11.3-11.3-33.9-33.9-62.1-62.1L291.7 89.8l-11.3 11.3-22.6 22.6L58.6 322.9c-10.4 10.4-18 23.3-22.2 37.4L1 480.7c-2.5 8.4-.2 17.5 6.1 23.7s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L387.7 253.7l22.6-22.6zm-32.5-135.9l62.1 62.1 39.4-39.4c15.6-15.6 15.6-40.9 0-56.6L433.9 15.6c-15.6-15.6-40.9-15.6-56.6 0L338 54.9l39.4 39.4z"/></svg>
                   </button>
-                  <label class="cursor-pointer bg-amber-500 hover:bg-amber-600 w-8 h-8 rounded-lg font-medium transition-all flex items-center justify-center" 
-                        title="Upload POD">
-                    <i class="fas fa-camera text-xs"></i>
+                  <label class="action-pod-btn" title="Upload POD">
+                    <svg class="edit-svgIcon" viewBox="0 0 512 512"><path d="M149.1 64.8L138.7 96H64C28.7 96 0 124.7 0 160V416c0 35.3 28.7 64 64 64H448c35.3 0 64-28.7 64-64V160c0-35.3-28.7-64-64-64H373.3L362.9 64.8C356.4 45.2 338.1 32 317.4 32H194.6c-20.7 0-39 13.2-45.5 32.8zM256 192a96 96 0 1 1 0 192 96 96 0 1 1 0-192z"/></svg>
                     <input type="file" accept="image/*" onchange="uploadPOD(event, ${idx})" class="hidden">
                   </label>
-                  <button onclick="deleteShipment(${idx})" 
-                          class="bg-red-600 hover:bg-red-700 w-8 h-8 rounded-lg transition-all cursor-pointer flex items-center justify-center" 
-                          title="Delete">
-                    <i class="fas fa-trash text-xs"></i>
+                  <button onclick="deleteShipment(${idx})" class="action-delete-btn" title="Delete">
+                    <svg class="svgIcon" viewBox="0 0 448 512"><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"/></svg>
                   </button>
                 </div>
               </td>
@@ -2505,6 +2520,8 @@ void main() {
           setTimeout(injectRippleButtons, 100);
 
           startSession(email);
+
+          setTimeout(() => { restyleTabPills(); updateParentUnderline(); updateSubUnderline(); }, 100);
 
           // Fetch shipments filtered by branch (super admin gets all)
           const query = db.from('shipments').select('*').order('created_at', { ascending: false });
@@ -3242,30 +3259,25 @@ void main() {
     const adminPanel = document.getElementById('admin-panel');
     if (!adminPanel) return;
 
-    // Target only solid action buttons — skip icon-only, text-link, close (×) buttons
-    const skipClasses = ['icon-action', 'text-amber-400', 'text-zinc-400', 'text-zinc-500', 'text-emerald-400', 'text-red-400'];
+    const skipClasses = ['icon-action', 'text-amber-400', 'text-zinc-400', 'text-zinc-500', 'text-emerald-400', 'text-red-400', 'parent-tab', 'sub-tab', 'login-fab-btn', 'logout-fab-btn'];
     const skipText = ['×', '←', 'Undo', 'Forgot Password', 'Back to Login'];
 
     const buttons = adminPanel.querySelectorAll('button');
 
     buttons.forEach(btn => {
-      // Skip if already injected
       if (btn.classList.contains('ripple-btn')) return;
 
-      // Skip icon-only or text-link buttons
       const cls = btn.className || '';
       if (skipClasses.some(c => cls.includes(c))) return;
       const txt = btn.textContent.trim();
       if (skipText.some(t => txt.includes(t))) return;
       if (txt.length < 2) return; // icon-only (×, ←)
 
-      // Wrap existing content in label span
       const label = document.createElement('span');
       label.className = 'rpl-label';
       label.innerHTML = btn.innerHTML;
       btn.innerHTML = '';
 
-      // Inject 5 ripple spans
       for (let i = 0; i < 5; i++) {
         const s = document.createElement('span');
         s.className = 'rpl';
@@ -3277,7 +3289,7 @@ void main() {
     });
   }
 
-  // ── TRACK SHIPMENT: real Supabase lookup, full-page result ──
+  // ── TRACK SHIPMENT──
   (function() {
     const trackSubmit = document.getElementById('trackSubmitBtn');
     const awbInput     = document.getElementById('awbInput');
@@ -3476,3 +3488,78 @@ void main() {
     });
   })();
 
+  function positionTabUnderline(buttons, underline) {
+    if (!underline || !buttons.length) return;
+    const parent = buttons[0].parentElement;
+    const activeBtn = Array.from(buttons).find(b => b.classList.contains('active')) || buttons[0];
+    const parentRect = parent.getBoundingClientRect();
+    const btnRect = activeBtn.getBoundingClientRect();
+    const barWidth = 22; // fixed small width, not the full button
+    const btnCenter = (btnRect.left - parentRect.left) + (btnRect.width / 2);
+    underline.style.left = (btnCenter - barWidth / 2) + 'px';
+    underline.style.width = barWidth + 'px';
+  }
+
+  function updateParentUnderline() {
+    positionTabUnderline(document.querySelectorAll('.parent-tab'), document.getElementById('parentTabUnderline'));
+  }
+  function updateSubUnderline() {
+    positionTabUnderline(document.querySelectorAll('.sub-tab'), document.getElementById('subTabUnderline'));
+  }
+
+  function restyleTabPills() {
+    document.querySelectorAll('.parent-tab, .sub-tab').forEach(btn => {
+      btn.classList.remove('bg-amber-500', 'rounded-2xl');
+      const isActive = btn.classList.contains('active');
+      btn.style.setProperty('background', 'transparent', 'important');
+      btn.style.setProperty('border-radius', '9999px', 'important');
+      btn.style.setProperty('color', isActive ? '#f4ebd0' : 'rgba(244,235,208,0.5)', 'important');
+      btn.style.setProperty('font-weight', '600', 'important');
+      btn.style.setProperty('outline', 'none', 'important');
+      btn.style.setProperty('box-shadow', 'none', 'important');
+      btn.style.setProperty('border', 'none', 'important');
+    });
+
+    const parentRow = document.getElementById('parent0')?.parentElement;
+    if (parentRow) {
+      parentRow.style.setProperty('display', 'flex', 'important');
+      parentRow.style.setProperty('width', 'fit-content', 'important');
+      parentRow.style.setProperty('margin-left', 'auto', 'important');
+      parentRow.style.setProperty('margin-right', 'auto', 'important');
+      parentRow.style.setProperty('background', '#0d0d0f', 'important');
+      parentRow.style.setProperty('border-radius', '9999px', 'important');
+      parentRow.style.setProperty('padding', '6px', 'important');
+      parentRow.style.setProperty('gap', '4px', 'important');
+      parentRow.style.setProperty('position', 'relative', 'important');
+      parentRow.style.setProperty('box-shadow', 'inset 2px 5px 10px rgba(5,5,5,0.6)', 'important');    }
+
+    const subRow = document.getElementById('subtab0')?.parentElement;
+    if (subRow) {
+      subRow.style.setProperty('display', 'flex', 'important');
+      subRow.style.setProperty('width', 'fit-content', 'important');
+      subRow.style.setProperty('margin-left', '0', 'important');
+      subRow.style.setProperty('margin-right', 'auto', 'important');
+      subRow.style.setProperty('background', '#0d0d0f', 'important');
+      subRow.style.setProperty('border-radius', '9999px', 'important');
+      subRow.style.setProperty('padding', '6px', 'important');
+      subRow.style.setProperty('gap', '4px', 'important');
+      subRow.style.setProperty('position', 'relative', 'important');
+      subRow.style.setProperty('box-shadow', 'inset 2px 5px 10px rgba(5,5,5,0.6)', 'important');    }
+  }
+
+  document.getElementById('shipments-body').addEventListener('mouseover', (e) => {
+    const btn = e.target.closest('.action-edit-btn, .action-pod-btn, .action-delete-btn');
+    if (!btn) return;
+    const group = btn.closest('.row-action-group');
+    if (!group) return;
+    group.querySelectorAll('.action-edit-btn, .action-pod-btn, .action-delete-btn').forEach(sib => {
+      if (sib !== btn) sib.classList.add('action-squeeze');
+    });
+  });
+  document.getElementById('shipments-body').addEventListener('mouseout', (e) => {
+    const group = e.target.closest('.row-action-group');
+    if (!group || group.contains(e.relatedTarget)) return;
+    group.querySelectorAll('.action-edit-btn, .action-pod-btn, .action-delete-btn').forEach(sib => {
+      sib.classList.remove('action-squeeze');
+    });
+  });
