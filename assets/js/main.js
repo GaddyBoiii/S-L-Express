@@ -1898,53 +1898,87 @@ void main() {
         const shipment = shipments[index];
         const modal = document.createElement('div');
         modal.id = 'status-update-modal';
-        modal.className = 'fixed inset-0 bg-black/90 flex items-center justify-center z-[400] p-4';
-        
+        modal.className = 'fixed inset-0 bg-black/90 z-[400]';
+        modal.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 400;';
         const today = new Date().toISOString().split('T')[0];
-        
+        const history = shipment.history || [];
+        const lastDate = history.length ? history[history.length - 1].date : today;
+
+        const historyHTML = history.length
+          ? [...history].reverse().map((h, i) => {
+              const originalIndex = history.length - 1 - i;
+              return `
+                <div class="flex gap-3 mb-4 items-start ${i === 0 ? '' : 'opacity-70'}">
+                  <div class="flex flex-col items-center">
+                    <span class="w-2.5 h-2.5 rounded-full ${i === 0 ? 'bg-amber-400' : 'bg-zinc-600'} mt-1"></span>
+                    ${i < history.length - 1 ? '<span class="w-px flex-1 bg-zinc-700 mt-1"></span>' : ''}
+                  </div>
+                  <div class="flex-1">
+                    <p class="font-semibold text-sm ${i === 0 ? 'text-amber-400' : 'text-zinc-300'}">${sanitizeInput(h.status)}</p>
+                    <p class="text-xs text-zinc-500 mt-0.5">${h.date || ''}${h.location ? ' &bull; ' + sanitizeInput(h.location) : ''}</p>
+                  </div>
+                  <button onclick="deleteHistoryEntry(${index}, ${originalIndex})" class="action-delete-btn" style="width:26px;height:26px;flex-shrink:0;" title="Delete">
+                    <svg class="svgIcon" viewBox="0 0 448 512" style="width:11px;"><path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"/></svg>
+                  </button>
+                </div>
+              `;
+            }).join('')
+          : '<p class="text-zinc-500 text-sm text-center">No history yet.</p>';
+
         modal.innerHTML = `
-          <div class="bg-zinc-900 p-6 md:p-10 rounded-3xl w-full max-w-md">
-            <h2 class="heading-font text-2xl md:text-3xl mb-6 text-center">Update Status</h2>
-            
-            <div class="space-y-4">
-              <div>
-                <label class="block text-sm font-semibold mb-2 text-zinc-300">Status</label>
-                <select id="modal-status" onchange="toggleNoteField()" class="w-full bg-zinc-800 border border-amber-400 p-3 rounded-lg text-sm">
-                  <option value="Picked Up">Picked Up</option>
-                  <option value="In Transit" selected>In Transit</option>
-                  <option value="Out for Delivery">Out for Delivery</option>
-                  <option value="Delivered">Delivered</option>
-                  <option value="Note">Note</option>
-                </select>
+          <div class="flex flex-col md:flex-row items-start gap-4" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; max-width: 900px; padding: 1rem;">
+
+            <div class="bg-zinc-900 p-6 md:p-10 rounded-3xl w-full md:w-1/2">
+              <h2 class="heading-font text-xl md:text-2xl mb-1 text-center">Update Status</h2>
+              <p class="text-center text-amber-400 text-lg font-semibold mb-6">${sanitizeInput(shipment.tracking)}</p>
+
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-semibold mb-2 text-zinc-300">Status</label>
+                  <select id="modal-status" onchange="toggleNoteField()" class="w-full bg-zinc-800 border border-amber-400 p-3 rounded-lg text-sm">
+                    <option value="Picked Up" ${shipment.status === 'Picked Up' ? 'selected' : ''}>Picked Up</option>
+                    <option value="In Transit" ${shipment.status === 'In Transit' ? 'selected' : ''}>In Transit</option>
+                    <option value="Out for Delivery" ${shipment.status === 'Out for Delivery' ? 'selected' : ''}>Out for Delivery</option>
+                    <option value="Delivered" ${shipment.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                    <option value="Note" ${shipment.status === 'Note' ? 'selected' : ''}>Note</option>
+                  </select>
+                </div>
+
+                <div id="note-field" class="hidden">
+                  <label class="block text-sm font-semibold mb-2 text-zinc-300">Note</label>
+                  <input type="text" id="modal-note" placeholder="Enter note message..." class="w-full bg-zinc-800 border border-amber-400 p-3 rounded-lg text-sm" maxlength="200">
+                </div>
+
+                <div>
+                  <label class="block text-sm font-semibold mb-2 text-zinc-300">Update Date</label>
+                  <input type="date" id="modal-date" value="${lastDate}" class="w-full bg-zinc-800 border border-white/20 p-3 rounded-lg text-sm">
+                </div>
+
+                <div>
+                  <label class="block text-sm font-semibold mb-2 text-zinc-300">Location</label>
+                  <input type="text" id="modal-location" placeholder="e.g., Chennai" class="w-full bg-zinc-800 border border-white/20 p-3 rounded-lg text-sm" maxlength="100">
+                </div>
               </div>
-              
-              <div id="note-field" class="hidden">
-                <label class="block text-sm font-semibold mb-2 text-zinc-300">Note</label>
-                <input type="text" id="modal-note" placeholder="Enter note message..." class="w-full bg-zinc-800 border border-amber-400 p-3 rounded-lg text-sm" maxlength="200">
-              </div>
-              
-              <div>
-                <label class="block text-sm font-semibold mb-2 text-zinc-300">Update Date</label>
-                <input type="date" id="modal-date" value="${today}" class="w-full bg-zinc-800 border border-white/20 p-3 rounded-lg text-sm">
-              </div>
-              
-              <div>
-                <label class="block text-sm font-semibold mb-2 text-zinc-300">Location</label>
-                <input type="text" id="modal-location" placeholder="e.g., Delhi Distribution Center" value="${sanitizeInput(shipment.location) || ''}" class="w-full bg-zinc-800 border border-white/20 p-3 rounded-lg text-sm" maxlength="100">
+
+              <div class="flex gap-3 mt-8">
+                <button onclick="confirmStatusUpdate(${index})" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-lg font-semibold transition-all">
+                  Confirm
+                </button>
+                <button onclick="closeStatusUpdateModal()" class="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white py-3 rounded-lg font-semibold transition-all">
+                  Cancel
+                </button>
               </div>
             </div>
-            
-            <div class="flex gap-3 mt-8">
-              <button onclick="confirmStatusUpdate(${index})" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-lg font-semibold transition-all">
-                Confirm
-              </button>
-              <button onclick="closeStatusUpdateModal()" class="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white py-3 rounded-lg font-semibold transition-all">
-                Cancel
-              </button>
+
+            <div class="bg-zinc-900 p-6 md:p-10 rounded-3xl mx-auto" style="width: fit-content; min-width: 340px; max-width: 480px;">
+              <h2 class="heading-font text-xl md:text-2xl mb-1 text-center">Shipment Timeline</h2>
+              <p class="text-center text-amber-400 text-base font-semibold mb-6">${sanitizeInput(shipment.origin)} &rarr; ${sanitizeInput(shipment.destination)}</p>
+              ${historyHTML}
             </div>
+
           </div>
         `;
-        
+
         document.body.appendChild(modal);
       }
 
@@ -2022,6 +2056,29 @@ void main() {
           logActivity('DELETE_SHIPMENT', `Deleted shipment ${trackingNo}`);
           renderShipments();
         }
+      }
+
+      async function deleteHistoryEntry(shipmentIndex, historyIndex) {
+        if (!confirm('Delete this status entry?')) return;
+        const shipment = shipments[shipmentIndex];
+        shipment.history.splice(historyIndex, 1);
+
+        if (shipment.history.length) {
+          const latest = shipment.history[shipment.history.length - 1];
+          if (!latest.status.startsWith('Note: ')) shipment.status = latest.status;
+          shipment.date = latest.date;
+          shipment.location = latest.location;
+        }
+
+        const updatePayload = { history: shipment.history, date: shipment.date, location: shipment.location };
+        if (shipment.history.length) updatePayload.status = shipment.status;
+        await db.from('shipments').update(updatePayload).eq('tracking', shipment.tracking);
+
+        saveData();
+        logActivity('CONFIRM_UPDATE', `Deleted a history entry for ${shipment.tracking}`);
+        closeStatusUpdateModal();
+        openStatusUpdateModal(shipmentIndex);
+        renderShipments();
       }
 
       function showUndoToast(message, onUndo) {
@@ -2159,8 +2216,8 @@ void main() {
           tracking, customer, consignee,
           cust_id: custId,        // ← was custId
           origin, destination, status, date,
-          location: "Initial Pickup",
-          history: [{ status, date, location: "Initial Pickup" }],
+          location: " ",
+          history: [{ status, date, location: " " }],
           pod_url: null, boxes, weight, rate,
           branch: securityState.role === 'super_admin'
             ? (securityState.activeBranch === 'all' ? 'blr' : securityState.activeBranch)
