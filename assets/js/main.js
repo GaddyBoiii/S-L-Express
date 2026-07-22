@@ -502,6 +502,7 @@ if (logoHomeLink) logoHomeLink.addEventListener('click', e => {
       const bp = Math.max(0, Math.min(1, (raw - 0.72) / 0.28));
       const eased = bp < 0.5 ? 2*bp*bp : 1 - Math.pow(-2*bp+2,2)/2;
       bloomOverlay.style.clipPath = `circle(${(eased*150).toFixed(2)}% at 50% 50%)`;
+      document.querySelector('nav').classList.toggle('nav-on-cream', bp > 0.5);
       if (dotCanvas) dotCanvas.classList.toggle('visible', bp > 0.3);
       const show = bp > 0.92;
       if (page2) { page2.classList.toggle('revealed', show); if (show) riseCards(); }
@@ -693,6 +694,7 @@ if (logoHomeLink) logoHomeLink.addEventListener('click', e => {
           if (radius > 140) {
             navEl.classList.remove('nav-hidden');
             navEl.classList.add('nav-force-visible');
+            navEl.classList.remove('nav-on-cream');
           } else {
             navEl.classList.remove('nav-force-visible');
           }
@@ -1099,6 +1101,7 @@ if (logoHomeLink) logoHomeLink.addEventListener('click', e => {
       const maxScroll = section.offsetHeight - window.innerHeight;
       if (maxScroll <= 0) return;
       const p = Math.max(0, Math.min(1, scrolled / maxScroll));
+      if (p > 0) document.querySelector('nav').classList.remove('nav-on-cream');
 
       // ─── PHASE 1 (0–60%): card entry + panel cycling ───────────────
       const entryP = Math.min(1, p / 0.05);
@@ -1761,6 +1764,9 @@ void main() {
           if (content) content.classList.toggle('hidden', i !== n);
         }
         
+        if (n === 0) {
+          renderShipments();
+        }
         if (n === 2) {
           setTimeout(() => updateAnalytics(), 100);
         }
@@ -1771,9 +1777,8 @@ void main() {
           renderBilling();
         }
         if (n === 5) {
-        renderStatistics();
+          renderStatistics();
         }
-        setTimeout(injectRippleButtons, 150);
       }
 
       function switchSubTab(n) {
@@ -1787,12 +1792,22 @@ void main() {
           updateSubUnderline();
         });
         renderShipments();
-        setTimeout(injectRippleButtons, 150);
+      }
+
+      function updateSubTabCounts() {
+        const updateCount = shipments.filter(s => !s.pod).length;
+        const pendingCount = shipments.filter(s => s.pod && s.status !== 'Delivered').length;
+        const deliveredCount = shipments.filter(s => s.pod && s.status === 'Delivered').length;
+
+        document.getElementById('subtab0-count').textContent = ` (${updateCount})`;
+        document.getElementById('subtab1-count').textContent = ` (${pendingCount})`;
+        document.getElementById('subtab2-count').textContent = ` (${deliveredCount})`;
       }
 
       function renderShipments() {
         if (currentParentTab !== 0) return;
         const search = sanitizeInput(document.getElementById('search-input').value).toUpperCase();
+        updateSubTabCounts();
         if (search) {
           const match = shipments.find(s => s.tracking.toUpperCase().includes(search));
           if (match) {
@@ -1898,8 +1913,8 @@ void main() {
         const shipment = shipments[index];
         const modal = document.createElement('div');
         modal.id = 'status-update-modal';
-        modal.className = 'fixed inset-0 bg-black/90 z-[400]';
-        modal.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 400;';
+        modal.className = 'fixed inset-0 bg-black/90 flex items-center justify-center z-[400] p-4';
+
         const today = new Date().toISOString().split('T')[0];
         const history = shipment.history || [];
         const lastDate = history.length ? history[history.length - 1].date : today;
@@ -1926,7 +1941,7 @@ void main() {
           : '<p class="text-zinc-500 text-sm text-center">No history yet.</p>';
 
         modal.innerHTML = `
-          <div class="flex flex-col md:flex-row items-start gap-4" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; max-width: 900px; padding: 1rem;">
+          <div class="flex flex-col md:flex-row gap-4 w-full max-w-3xl">
 
             <div class="bg-zinc-900 p-6 md:p-10 rounded-3xl w-full md:w-1/2">
               <h2 class="heading-font text-xl md:text-2xl mb-1 text-center">Update Status</h2>
@@ -1956,21 +1971,25 @@ void main() {
 
                 <div>
                   <label class="block text-sm font-semibold mb-2 text-zinc-300">Location</label>
-                  <input type="text" id="modal-location" placeholder="e.g., Chennai" class="w-full bg-zinc-800 border border-white/20 p-3 rounded-lg text-sm" maxlength="100">
+                  <input type="text" id="modal-location" placeholder="e.g., Delhi Distribution Center" class="w-full bg-zinc-800 border border-white/20 p-3 rounded-lg text-sm" maxlength="100">
                 </div>
               </div>
 
               <div class="flex gap-3 mt-8">
-                <button onclick="confirmStatusUpdate(${index})" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-lg font-semibold transition-all">
-                  Confirm
+                <button onclick="confirmStatusUpdate(${index})" class="tab-3d tab-3d-confirm flex-1">
+                  <span class="edge"></span>
+                  <span class="shadow"></span>
+                  <span class="front">Confirm</span>
                 </button>
-                <button onclick="closeStatusUpdateModal()" class="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white py-3 rounded-lg font-semibold transition-all">
-                  Cancel
+                <button onclick="closeStatusUpdateModal()" class="tab-3d tab-3d-cancel">
+                  <span class="edge"></span>
+                  <span class="shadow"></span>
+                  <span class="front">Cancel</span>
                 </button>
               </div>
             </div>
 
-            <div class="bg-zinc-900 p-6 md:p-10 rounded-3xl mx-auto" style="width: fit-content; min-width: 340px; max-width: 480px;">
+            <div class="bg-zinc-900 p-6 md:p-10 rounded-3xl w-full md:w-1/2 max-h-[80vh] overflow-y-auto">
               <h2 class="heading-font text-xl md:text-2xl mb-1 text-center">Shipment Timeline</h2>
               <p class="text-center text-amber-400 text-base font-semibold mb-6">${sanitizeInput(shipment.origin)} &rarr; ${sanitizeInput(shipment.destination)}</p>
               ${historyHTML}
@@ -2190,11 +2209,13 @@ void main() {
         let tracking = sanitizeInput(document.getElementById('new-tracking').value).toUpperCase();
         
         if (!tracking) {
-          tracking = "SLX" + Math.floor(10000000 + Math.random()*90000000);
+          alert("Please Enter Tracking Number");
+          document.getElementById('new-tracking').focus();
+          return;
         }
         
         if (shipments.some(s => s.tracking.toUpperCase() === tracking.toUpperCase())) {
-          alert("Tracking number already exists! Please use a different number.");
+          alert("Tracking Number already exists");
           return;
         }
 
@@ -2250,6 +2271,24 @@ void main() {
           populateShipmentMonthFilter();
         }
       }
+
+      setupGridArrowNav([
+        ['new-tracking', 'new-customer'],
+        ['new-custid', 'new-consignee'],
+        ['new-origin', 'new-destination'],
+        ['new-status', 'new-date'],
+      ], ['new-status', 'new-date']);
+  
+      setupGridArrowNav([
+        ['new-boxes', 'new-weight', 'new-rate'],
+      ]);
+
+      document.getElementById('new-date').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          document.getElementById('new-boxes').focus();
+        }
+      });
 
       function initFuzzyText(canvas, text, opts = {}) {
         const {
@@ -2574,7 +2613,6 @@ void main() {
 
           document.getElementById('login-modal').classList.add('hidden');
           document.getElementById('admin-panel').classList.remove('hidden');
-          setTimeout(injectRippleButtons, 100);
 
           startSession(email);
 
@@ -3312,39 +3350,6 @@ void main() {
     requestAnimationFrame(step);
   }
 
-  function injectRippleButtons() {
-    const adminPanel = document.getElementById('admin-panel');
-    if (!adminPanel) return;
-
-    const skipClasses = ['icon-action', 'text-amber-400', 'text-zinc-400', 'text-zinc-500', 'text-emerald-400', 'text-red-400', 'parent-tab', 'sub-tab', 'login-fab-btn', 'logout-fab-btn'];
-    const skipText = ['×', '←', 'Undo', 'Forgot Password', 'Back to Login'];
-
-    const buttons = adminPanel.querySelectorAll('button');
-
-    buttons.forEach(btn => {
-      if (btn.classList.contains('ripple-btn')) return;
-
-      const cls = btn.className || '';
-      if (skipClasses.some(c => cls.includes(c))) return;
-      const txt = btn.textContent.trim();
-      if (skipText.some(t => txt.includes(t))) return;
-      if (txt.length < 2) return; // icon-only (×, ←)
-
-      const label = document.createElement('span');
-      label.className = 'rpl-label';
-      label.innerHTML = btn.innerHTML;
-      btn.innerHTML = '';
-
-      for (let i = 0; i < 5; i++) {
-        const s = document.createElement('span');
-        s.className = 'rpl';
-        btn.appendChild(s);
-      }
-
-      btn.appendChild(label);
-      btn.classList.add('ripple-btn');
-    });
-  }
 
   // ── TRACK SHIPMENT──
   (function() {
@@ -3630,4 +3635,53 @@ void main() {
     group.querySelectorAll('.action-edit-btn, .action-pod-btn, .action-delete-btn').forEach(sib => {
       sib.classList.remove('action-squeeze');
     });
+  });
+
+  function setupGridArrowNav(layout, skipIds = []) {
+    const pos = {};
+    layout.forEach((row, r) => row.forEach((id, c) => { pos[id] = { r, c }; }));
+
+    layout.flat().forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const isNumber = el.type === 'number';
+      const isSkip = skipIds.includes(id) || isNumber;
+
+      const focusAt = (row, col) => {
+        const targetRow = layout[row];
+        if (!targetRow) return;
+        const clampedCol = Math.min(col, targetRow.length - 1);
+        const targetEl = document.getElementById(targetRow[clampedCol]);
+        if (targetEl) targetEl.focus();
+      };
+
+      el.addEventListener('keydown', (e) => {
+        const { r, c } = pos[id];
+
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          focusAt(r + 1, c);
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          focusAt(r - 1, c);
+        } else if (e.key === 'ArrowRight') {
+          if (!isSkip && el.selectionStart !== el.value.length) return;
+          e.preventDefault();
+          if (c + 1 < layout[r].length) focusAt(r, c + 1);
+          else focusAt(r + 1, 0);
+        } else if (e.key === 'ArrowLeft') {
+          if (!isSkip && el.selectionStart !== 0) return;
+          e.preventDefault();
+          if (c - 1 >= 0) focusAt(r, c - 1);
+          else focusAt(r - 1, (layout[r - 1] || []).length - 1);
+        }
+      });
+    });
+  }
+
+  window.addEventListener('scroll', () => {
+    const btn = document.getElementById('back-to-top-btn');
+    if (!btn) return;
+    const shouldShow = window.scrollY > 300 && currentParentTab === 0;
+    btn.classList.toggle('visible', shouldShow);
   });
