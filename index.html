@@ -752,9 +752,9 @@
         </div> 
         <div class="flex flex-wrap gap-2 md:gap-3 mb-6 md:mb-8 border-b border-white/10 pb-4 overflow-x-auto">
           <span class="tab-underline" id="subTabUnderline"></span>
-          <button onclick="switchSubTab(0)" id="subtab0" class="sub-tab active px-6 md:px-8 py-2 md:py-3 rounded-2xl text-black font-semibold whitespace-nowrap transition-all cursor-pointer">Update</button>
-          <button onclick="switchSubTab(1)" id="subtab1" class="sub-tab px-6 md:px-8 py-2 md:py-3 rounded-2xl hover:bg-white/10 whitespace-nowrap transition-all cursor-pointer">Pending</button>
-          <button onclick="switchSubTab(2)" id="subtab2" class="sub-tab px-6 md:px-8 py-2 md:py-3 rounded-2xl hover:bg-white/10 whitespace-nowrap transition-all cursor-pointer">Delivered</button>
+          <button onclick="switchSubTab(0)" id="subtab0" class="sub-tab active px-6 md:px-8 py-2 md:py-3 rounded-2xl text-black font-semibold whitespace-nowrap transition-all cursor-pointer">Update<span id="subtab0-count"></span></button>
+          <button onclick="switchSubTab(1)" id="subtab1" class="sub-tab px-6 md:px-8 py-2 md:py-3 rounded-2xl hover:bg-white/10 whitespace-nowrap transition-all cursor-pointer">Pending<span id="subtab1-count"></span></button>
+          <button onclick="switchSubTab(2)" id="subtab2" class="sub-tab px-6 md:px-8 py-2 md:py-3 rounded-2xl hover:bg-white/10 whitespace-nowrap transition-all cursor-pointer">Delivered<span id="subtab2-count"></span></button>
         </div>
 
         <div class="bg-zinc-900 rounded-3xl overflow-x-auto">
@@ -788,9 +788,10 @@
           <input id="new-client-name" placeholder="Customer Name"
                 class="bg-zinc-800 border border-white/10 focus:border-amber-400/60 p-3 rounded-xl text-sm outline-none transition-colors"
                 autocomplete="off">
-          <button onclick="addClient()"
-                  class="bg-amber-500 hover:bg-amber-600 text-black py-2 rounded-xl text-sm font-bold transition-all cursor-pointer">
-            Add Client
+          <button onclick="addNewClient()" class="tab-3d tab-3d-indigo">
+            <span class="edge"></span>
+            <span class="shadow"></span>
+            <span class="front">Add Client</span>
           </button>
           <div id="client-list" class="mt-2 max-h-64 overflow-y-auto">
             <p class="text-zinc-600 text-xs text-center py-4">No clients yet</p>
@@ -802,10 +803,10 @@
           <h2 class="text-2xl md:text-3xl mb-6 md:mb-8">Create New Shipment</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
           <input id="new-tracking" placeholder="Tracking/AWB Number" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
-          <input id="new-customer" placeholder="Customer/Consignor" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
-          <input id="new-custid" placeholder="Customer ID" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" oninput="autofillCustomer()" autocomplete="off">          <input id="new-consignee" placeholder="Consignee Name (receiver)"   class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
-          <input id="new-origin" placeholder="Origin City" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
-          <input id="new-destination" placeholder="Destination City" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
+          <input id="new-customer" placeholder="Customer/Consignor" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="on">
+          <input id="new-custid" placeholder="Customer ID" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" oninput="autofillCustomer()" autocomplete="off">          <input id="new-consignee" placeholder="Consignee Name (receiver)"   class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="on">
+          <input id="new-origin" placeholder="Origin City" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="on">
+          <input id="new-destination" placeholder="Destination City" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="on">
           <select id="new-status" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base">
             <option value="Picked Up">Picked Up</option>
             <option value="In Transit" selected>In Transit</option>
@@ -845,8 +846,10 @@
               <span class="calc-amount" id="calc-amt">—</span>
             </div>
           </div>
-          <button onclick="addNewShipment()" class="mt-8 md:mt-10 w-full bg-amber-500 hover:bg-amber-600 text-black py-4 md:py-6 rounded-2xl font-bold text-base md:text-lg transition-all cursor-pointer">
-           Create Shipment
+          <button onclick="addNewShipment()" class="tab-3d tab-3d-indigo tab-3d-lg">
+            <span class="edge"></span>
+            <span class="shadow"></span>
+            <span class="front">Create Shipment</span>
           </button>
         </div>
       </div>
@@ -1052,8 +1055,15 @@
         <div class="bg-zinc-900 p-6 rounded-2xl border border-white/10">
           <h2 class="text-2xl font-semibold mb-6">Admin Activity Log</h2>
           <div class="flex gap-3 mb-6">
-            <button onclick="clearActivityLog()" class="bg-red-600 hover:bg-red-700 px-6 py-2 rounded-2xl text-sm transition-all cursor-pointer">Clear Log</button>
-            <button onclick="downloadActivityLog()" class="bg-emerald-600 hover:bg-emerald-700 px-6 py-2 rounded-2xl text-sm transition-all cursor-pointer">Download CSV</button>
+            <button onclick="clearActivityLog()" class="btn-slide btn-slide-red">
+              <span class="btn-text-one">Clear Log</span>
+              <span class="btn-text-two">Clear Log?</span>
+            </button>
+
+            <button onclick="downloadActivityLog()" class="btn-slide btn-slide-green">
+              <span class="btn-text-one">Download CSV</span>
+              <span class="btn-text-two">Download?</span>
+            </button>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
@@ -1085,7 +1095,7 @@
 
       <div class="modal-input-wrap">
         <label for="admin-user">Username</label>
-        <input id="admin-user" type="text" autocomplete="off" class="pill-input" placeholder="Username">
+        <input id="admin-user" type="text" autocomplete="username" class="pill-input" placeholder="Username">
       </div>
       <div class="modal-input-wrap">
         <label for="admin-pass">Password</label>
