@@ -3069,12 +3069,7 @@ void main() {
     editingTrackingNo=null;
   }
 
-  // ════════════════════════════════════════════
-  // FIX 2 + FIX 3: EXCEL EXPORT
-  // custId = null → export ALL clients for the month
-  // custId = "CUST-001" → export only that client
-  // Columns: S/NO, DATE (dd.mm.yyyy), AWB NO, CONSIGNEE, DESTINATION, QTY, WEIGHT, AMOUNT
-  // ════════════════════════════════════════════
+
   function exportRangeExcel(custId) {
     const from = document.getElementById("range-from").value;
     const to   = document.getElementById("range-to").value;
@@ -3090,6 +3085,7 @@ void main() {
     }
 
     if (!ms.length) { alert("No shipments found for that date range" + (custId ? " · " + clientName : "")); return; }
+    ms = ms.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
 
     const rows = ms.map((s, i) => ({
       "S/NO":        i + 1,
@@ -3150,6 +3146,7 @@ void main() {
     }
 
     if (!ms.length) { alert("No shipments to export for " + label + (custId ? " · " + clientName : "")); return; }
+    ms = ms.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
 
     const rows = ms.map((s, i) => ({
       "S/NO":        i + 1,
