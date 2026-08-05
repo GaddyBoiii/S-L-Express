@@ -2411,6 +2411,7 @@ void main() {
       function showPodModalByUrl(url) {
         const podContainer = document.getElementById('pod-image-container');
         podContainer.innerHTML = `<img src="${url}" alt="POD" class="w-full h-auto max-h-96">`;
+        document.getElementById('pod-download-link').href = url;
         document.getElementById('pod-modal').classList.remove('hidden');
       }
 
@@ -2829,6 +2830,14 @@ void main() {
   function setPayStatus(c,m,st){ payStatus[payKey(c,m)]=st; }
   function inr(n){ return "₹"+Number(n||0).toLocaleString("en-IN"); }
   function fmtDate(d){ if(!d)return""; const p=d.split("-"); if(p.length!==3)return d; return p[2]+"."+p[1]+"."+p[0]; }
+  function fmtDateOnly(d) {
+    if (!d) return "";
+    const dateObj = new Date(d);
+    const dd = String(dateObj.getDate()).padStart(2, '0');
+    const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const yyyy = dateObj.getFullYear();
+    return `${dd}.${mm}.${yyyy}`;
+  }
   function monthLabel(val){ const[y,m]=val.split("-"); return["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][+m]+" "+y; }
   // ════════════════════════════════════════════
   // BILLING TAB
@@ -3085,11 +3094,11 @@ void main() {
     }
 
     if (!ms.length) { alert("No shipments found for that date range" + (custId ? " · " + clientName : "")); return; }
-    ms = ms.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+    ms = ms.slice().sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
     const rows = ms.map((s, i) => ({
       "S/NO":        i + 1,
-      "DATE":        fmtDate(s.date),
+      "DATE":        fmtDateOnly(s.created_at),
       "AWB NO":      s.tracking,
       "CONSIGNEE":   s.consignee || s.customer,
       "DESTINATION": s.destination,
@@ -3146,11 +3155,11 @@ void main() {
     }
 
     if (!ms.length) { alert("No shipments to export for " + label + (custId ? " · " + clientName : "")); return; }
-    ms = ms.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+    ms = ms.slice().sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
     const rows = ms.map((s, i) => ({
       "S/NO":        i + 1,
-      "DATE":        fmtDate(s.date),
+      "DATE":        fmtDateOnly(s.created_at),
       "AWB NO":      s.tracking,
       "CONSIGNEE":   s.consignee || s.customer,
       "DESTINATION": s.destination,
@@ -3428,6 +3437,13 @@ void main() {
 
       const detailsBtn    = document.getElementById('trViewDetailsBtn');
       const podBtn        = document.getElementById('trViewPodBtn');
+      if (podBtn) {
+        podBtn.addEventListener('click', () => {
+          document.getElementById('podModalImage').src = shipment.pod_url;
+          document.getElementById('podModalDownload').href = shipment.pod_url;
+          document.getElementById('podModal').style.display = 'flex';
+        });
+      }
       const timelinePanel = document.getElementById('trTimelinePanel');
 
       detailsBtn.addEventListener('click', () => {
@@ -3444,6 +3460,13 @@ void main() {
 
       if (podBtn) podBtn.addEventListener('click', () => showPodModalByUrl(shipment.pod_url));
     }
+
+    document.getElementById('podModalClose').addEventListener('click', () => {
+      document.getElementById('podModal').style.display = 'none';
+    });
+    document.getElementById('podModal').addEventListener('click', (e) => {
+      if (e.target.id === 'podModal') document.getElementById('podModal').style.display = 'none';
+    });
 
     function buildBasicDetailsHTML(shipment) {
       return `
