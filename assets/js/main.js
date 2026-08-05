@@ -1605,6 +1605,7 @@ void main() {
         if (!error && data) {
           shipments = data.map(s => ({ ...s, custId: s.cust_id, pod: s.pod_url }));
           renderShipments();
+          populateAutocompleteLists();
           updateStatusBadges();
           populateShipmentMonthFilter();
         }
@@ -2264,6 +2265,7 @@ void main() {
         document.getElementById('calc-desc').textContent = 'Enter weight & rate to preview bill amount';
         document.getElementById('calc-amt').textContent = '—';
         renderShipments();
+        populateAutocompleteLists();
         alert("Shipment created");
         const { data: freshData, error: fetchErr } = await db.from('shipments').select('*').order('created_at', { ascending: false });
         if (!fetchErr && freshData) {
@@ -2411,8 +2413,21 @@ void main() {
       function showPodModalByUrl(url) {
         const podContainer = document.getElementById('pod-image-container');
         podContainer.innerHTML = `<img src="${url}" alt="POD" class="w-full h-auto max-h-96">`;
-        document.getElementById('pod-download-link').href = url;
+        document.getElementById('pod-download-link').dataset.url = url;
         document.getElementById('pod-modal').classList.remove('hidden');
+      }
+
+      async function downloadPod(url) {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = 'POD.jpg';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
       }
 
 
@@ -3697,6 +3712,16 @@ void main() {
         }
       });
     });
+  }
+
+  function populateAutocompleteLists() {
+    const consignees = [...new Set(shipments.map(s => s.consignee).filter(Boolean))];
+    const origins = [...new Set(shipments.map(s => s.origin).filter(Boolean))];
+    const destinations = [...new Set(shipments.map(s => s.destination).filter(Boolean))];
+
+    document.getElementById('consignee-list').innerHTML = consignees.map(v => `<option value="${v}">`).join('');
+    document.getElementById('origin-list').innerHTML = origins.map(v => `<option value="${v}">`).join('');
+    document.getElementById('destination-list').innerHTML = destinations.map(v => `<option value="${v}">`).join('');
   }
 
   window.addEventListener('scroll', () => {
