@@ -640,7 +640,7 @@
         <button onclick="closePodModal()" class="text-2xl md:text-3xl text-zinc-400 hover:text-white cursor-pointer">&times;</button>
       </div>
       <div id="pod-image-container" class="bg-black rounded-2xl overflow-hidden"></div>
-      <a id="pod-download-link" href="" download class="download-btn mt-4">
+      <button id="pod-download-link" class="download-btn mt-4" onclick="downloadPod(this.dataset.url)">
         <div class="button-content">
           <div class="svg-container">
             <svg class="download-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
@@ -651,7 +651,7 @@
             <div class="text">Download</div>
           </div>
         </div>
-      </a>
+      </button>
       <button onclick="closePodModal()" class="mt-4 md:mt-6 w-full bg-zinc-800 hover:bg-zinc-700 py-3 md:py-4 rounded-2xl transition-all cursor-pointer">Close</button>
     </div>
   </div>
@@ -815,9 +815,12 @@
               <input id="new-tracking" name="tracking" placeholder="Tracking/AWB Number" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
               <input id="new-customer" name="customer" placeholder="Customer/Consignor" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="on">
               <input id="new-custid" name="custid" placeholder="Customer ID" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" oninput="autofillCustomer()" autocomplete="off">
-              <input id="new-consignee" name="consignee" placeholder="Consignee Name (receiver)" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="on">
-              <input id="new-origin" name="origin" placeholder="Origin City" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="on">
-              <input id="new-destination" name="destination" placeholder="Destination City" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="on">
+              <input id="new-consignee" name="consignee" list="consignee-list" placeholder="Consignee Name (receiver)" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
+              <datalist id="consignee-list"></datalist>
+              <input id="new-origin" name="origin" list="origin-list" placeholder="Origin City" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
+              <datalist id="origin-list"></datalist>
+              <input id="new-destination" name="destination" list="destination-list" placeholder="Destination City" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base" autocomplete="off">
+              <datalist id="destination-list"></datalist>
               <select id="new-status" class="bg-zinc-800 p-3 md:p-5 rounded-2xl text-sm md:text-base">
                 <option value="Picked Up">Picked Up</option>
                 <option value="In Transit" selected>In Transit</option>
