@@ -2410,20 +2410,22 @@ void main() {
         init();
       }
 
-      function showPodModalByUrl(url) {
+      function showPodModalByUrl(url, trackingNumber) {
         const podContainer = document.getElementById('pod-image-container');
         podContainer.innerHTML = `<img src="${url}" alt="POD" class="w-full h-auto max-h-96">`;
-        document.getElementById('pod-download-link').dataset.url = url;
+        const downloadBtn = document.getElementById('pod-download-link');
+        downloadBtn.dataset.url = url;
+        downloadBtn.dataset.tracking = trackingNumber;
         document.getElementById('pod-modal').classList.remove('hidden');
       }
 
-      async function downloadPod(url) {
+      async function downloadPod(url, trackingNumber) {
         const response = await fetch(url);
         const blob = await response.blob();
         const blobUrl = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = blobUrl;
-        a.download = 'POD.jpg';
+        a.download = `${trackingNumber}.png`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -3473,7 +3475,7 @@ void main() {
         }
       });
 
-      if (podBtn) podBtn.addEventListener('click', () => showPodModalByUrl(shipment.pod_url));
+      if (podBtn) podBtn.addEventListener('click', () => showPodModalByUrl(shipment.pod_url, shipment.tracking));
     }
 
     document.getElementById('podModalClose').addEventListener('click', () => {
@@ -3690,7 +3692,10 @@ void main() {
         if (targetEl) targetEl.focus();
       };
 
-      el.addEventListener('keydown', (e) => {
+       el.addEventListener('keydown', (e) => {
+        const field = id.replace('new-', '');
+        if (window.suggestionState && window.suggestionState[field]) return;
+        
         const { r, c } = pos[id];
 
         if (e.key === 'ArrowDown') {
@@ -3714,19 +3719,41 @@ void main() {
     });
   }
 
-  function populateAutocompleteLists() {
-    const consignees = [...new Set(shipments.map(s => s.consignee).filter(Boolean))];
-    const origins = [...new Set(shipments.map(s => s.origin).filter(Boolean))];
-    const destinations = [...new Set(shipments.map(s => s.destination).filter(Boolean))];
+  window.suggestionState = { consignee: false, origin: false, destination: false };
 
-    document.getElementById('consignee-list').innerHTML = consignees.map(v => `<option value="${v}">`).join('');
-    document.getElementById('origin-list').innerHTML = origins.map(v => `<option value="${v}">`).join('');
-    document.getElementById('destination-list').innerHTML = destinations.map(v => `<option value="${v}">`).join('');
+  function showSuggestions(inputId, listId, field) {
+    const input = document.getElementById(inputId);
+    const listEl = document.getElementById(listId);
+    const query = input.value.trim().toLowerCase();
+    const key = field;
+
+    if (!query) {
+      listEl.classList.add('hidden');
+      listEl.innerHTML = '';
+      window.suggestionState[key] = false;
+      return;
+    }
+
+    const values = [...new Set(shipments.map(s => s[field]).filter(Boolean))];
+    const matches = values.filter(v => v.toLowerCase().startsWith(query));
+
+    if (matches.length === 0) {
+      listEl.classList.add('hidden');
+      listEl.innerHTML = '';
+      window.suggestionState[key] = false;
+      return;
+    }
+
+    listEl.innerHTML = matches.map(v =>
+      `<div class="p-2 hover:bg-zinc-700 cursor-pointer text-sm" onclick="selectSuggestion('${inputId}', '${listId}', '${v.replace(/'/g, "\\'")}')">${v}</div>`
+    ).join('');
+    listEl.classList.remove('hidden');
+    window.suggestionState[key] = true;
   }
 
-  window.addEventListener('scroll', () => {
-    const btn = document.getElementById('back-to-top-btn');
-    if (!btn) return;
-    const shouldShow = window.scrollY > 300 && currentParentTab === 0;
-    btn.classList.toggle('visible', shouldShow);
-  });
+  function selectSuggestion(inputId, listId, value) {
+    document.getElementById(inputId).value = value;
+    document.getElementById(listId).classList.add('hidden');
+    const field = inputId.replace('new-', '');
+    window.suggestionState[field] = false;
+  }
